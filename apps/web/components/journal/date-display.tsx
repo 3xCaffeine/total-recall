@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Cloud, CloudRain, Sun } from "lucide-react";
+import { useWeather } from "@/components/focus/use-weather";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DateDisplayProps {
   date?: Date;
@@ -15,6 +16,7 @@ export function DateDisplay({
   mood,
 }: DateDisplayProps) {
   const [currentTime, setCurrentTime] = useState(date);
+  const { weather, isLoading } = useWeather();
 
   // Update time every minute
   useEffect(() => {
@@ -42,15 +44,6 @@ export function DateDisplay({
     });
   };
 
-  // Simple weather icon (placeholder - would be replaced with real weather API)
-  const WeatherIcon = () => {
-    const hour = currentTime.getHours();
-    if (hour >= 6 && hour < 18) {
-      return <Sun className="size-5 text-amber-500" />;
-    }
-    return <Cloud className="size-5 text-slate-400" />;
-  };
-
   return (
     <div className="space-y-2">
       {/* Main date */}
@@ -63,10 +56,15 @@ export function DateDisplay({
         <span>{formatTime(currentTime)}</span>
 
         {showWeather && (
-          <div className="flex items-center gap-1.5">
-            <WeatherIcon />
-            <span>Sunny</span>
-          </div>
+          <>
+            {isLoading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : weather ? (
+              <span>
+                {weather.temperature}°C · {weather.condition}
+              </span>
+            ) : null}
+          </>
         )}
 
         {mood && (
