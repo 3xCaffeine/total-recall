@@ -36,22 +36,38 @@ class CosdataClient:
         payloads: List[Dict[str, Any]],
         ids: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """Upsert vectors with payloads."""
+        """Upsert vectors with payloads using Cosdata transactions."""
         if not self._client:
             raise RuntimeError("Client not initialized. Call init() first.")
 
-        url = f"{self.base_url}/collections/{self.collection}/points/upsert"
+        # Step 1: Create a transaction
+        txn_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions"
+        txn_response = await self._client.post(txn_url, json={})
+        txn_data = txn_response.json()
+        txn_id = txn_data.get("transaction_id")
         
-        points = []
+        if not txn_id:
+            raise RuntimeError(f"Failed to create transaction: {txn_data}")
+
+        # Step 2: Prepare vectors with metadata
+        vectors_payload = []
         for i, (vector, payload) in enumerate(zip(vectors, payloads)):
-            points.append({
+            vectors_payload.append({
                 "id": ids[i] if ids else str(i),
-                "vector": vector,
-                "payload": payload,
+                "document_id": payload.get("id", ids[i] if ids else str(i)),
+                "dense_values": vector,
+                "metadata": payload,
             })
 
-        response = await self._client.post(url, json={"points": points})
-        return response.json()
+        # Step 3: Upsert vectors within transaction
+        upsert_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions/{txn_id}/upsert"
+        upsert_response = await self._client.post(upsert_url, json={"vectors": vectors_payload})
+        
+        # Step 4: Commit transaction
+        commit_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions/{txn_id}/commit"
+        commit_response = await self._client.post(commit_url, json={})
+        
+        return commit_response.json()
 
     async def search(
         self,
@@ -63,14 +79,13 @@ class CosdataClient:
         if not self._client:
             raise RuntimeError("Client not initialized. Call init() first.")
 
-        url = f"{self.base_url}/collections/{self.collection}/points/search"
+        url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/search"
         
         response = await self._client.post(
             url,
             json={
                 "vector": query_vector,
                 "limit": limit,
-                "score_threshold": score_threshold,
                 "with_payload": True,
             },
         )
@@ -88,10 +103,25 @@ class CosdataClient:
         return await self.search(query_vector, limit=limit)
 
     async def delete(self, ids: List[str]) -> Dict[str, Any]:
-        """Delete vectors by ID."""
+        """Delete vectors by ID using transaction."""
         if not self._client:
             raise RuntimeError("Client not initialized. Call init() first.")
 
-        url = f"{self.base_url}/collections/{self.collection}/points/delete"
-        response = await self._client.post(url, json={"ids": ids})
-        return response.json()
+        # Step 1: Create transaction
+        txn_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions"
+        txn_response = await self._client.post(txn_url, json={})
+        txn_data = txn_response.json()
+        txn_id = txn_data.get("transaction_id")
+        
+        if not txn_id:
+            raise RuntimeError(f"Failed to create transaction: {txn_data}")
+
+        # Step 2: Delete vectors within transaction
+        delete_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions/{txn_id}/delete"
+        delete_response = await self._client.post(delete_url, json={"ids": ids})
+        
+        # Step 3: Commit transaction
+        commit_url = f"{self.base_url}/api/v1/vectordb/collections/{self.collection}/transactions/{txn_id}/commit"
+        commit_response = await self._client.post(commit_url, json={})
+        
+        return commit_response.json()

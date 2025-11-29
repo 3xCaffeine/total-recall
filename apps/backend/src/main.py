@@ -69,7 +69,12 @@ async def lifespan(app: FastAPI):
     
     if api_key_available:
         try:
-            vector_service = VectorService(cosdata_client, settings.GOOGLE_API_KEY)
+            # Pass embedding model from settings to VectorService
+            vector_service = VectorService(
+                cosdata_client,
+                settings.GOOGLE_API_KEY,
+                embedding_model=getattr(settings, 'EMBEDDING_MODEL', 'models/text-embedding-004'),
+            )
             graph_service = GraphService(settings.GOOGLE_API_KEY)
             brain_service = BrainService(vector_service, graph_service, settings.GOOGLE_API_KEY)
             print("✓ All services initialized")

@@ -1,6 +1,6 @@
 """Brain service - RAG orchestrator combining vector and graph searches."""
 from typing import List, Dict, Any, Optional
-from google import genai
+import google.generativeai as genai
 from .vector import VectorService
 from .graph import GraphService
 import asyncio
@@ -21,11 +21,12 @@ class BrainService:
         self.graph_service = graph_service
         self.model = model
         self.google_api_key = google_api_key
-        self.client = None
+        self.client_available = False
         
         if google_api_key:
             try:
-                self.client = genai.Client(api_key=google_api_key)
+                genai.configure(api_key=google_api_key)
+                self.client_available = True
             except Exception as e:
                 print(f"Warning: Failed to initialize Gemini client: {e}")
                 self.client = None
@@ -101,18 +102,19 @@ class BrainService:
     ) -> str:
         """Generate a response using RAG."""
         
-        if not self.client:
+        if not self.client_available:
             return "Error: Gemini client not initialized. Please set GOOGLE_API_KEY."
         
-        # Query brain for context
-        brain_result = await self.query_brain(user_id, query)
-        context = brain_result["synthesized_context"]
+        try:
+            # Query brain for context
+            brain_result = await self.query_brain(user_id, query)
+            context = brain_result["synthesized_context"]
 
-        # Prepare prompt with context
-        if not system_prompt:
-            system_prompt = "You are a helpful assistant with access to the user's past thoughts and memories."
+            # Prepare prompt with context
+            if not system_prompt:
+                system_prompt = "You are a helpful assistant with access to the user's past thoughts and memories."
 
-        full_prompt = f"""
+            full_prompt = f"""
 {system_prompt}
 
 Context from memory:
@@ -121,12 +123,12 @@ Context from memory:
 User query: {query}
 """
 
-        # Generate response
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=full_prompt,
-        )
-        return response.text
+            # Generate response
+            response = genai.GenerativeModel(self.model).generate_content(full_prompt)
+            return response.text
+        except Exception as e:
+            print(f"Warning: RAG response generation failed: {e}")
+            return f"I encountered an error processing your query: {str(e)}"
 
     async def process_entry(
         self,
