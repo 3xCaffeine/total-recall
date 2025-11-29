@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ../apps/backend
+    container_name: total_recall_backend
+    env_file:
+      - .env
+    environment:
+      # This is how backend will reach Cosdata from inside the Docker network
+      COSDATA_URL: "http://cosdata:8443"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      - postgres
+      - neo4j
+      - cosdata
+    networks:
+      - total_recall_net
+
+  postgres:
+    image: postgres:16
+    container_name: total_recall_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-total_recall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-total_recall_password}
+      POSTGRES_DB: ${POSTGRES_DB:-total_recall}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - total_recall_net
+
+  neo4j:
+    image: neo4j:5
+    container_name: total_recall_neo4j
+    environment:
+      NEO4J_AUTH: "${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-neo4j_password}"
+    ports:
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - total_recall_net
+
+  cosdata:
+    image: cosdataio/cosdata:latest
+    container_name: total_recall_cosdata
+    # If Cosdata adds env vars later, you can put them here.
+    ports:
+      - "8443:8443"     # HTTP API
+      - "50051:50051"   # gRPC (if you use it later)
+    networks:
+      - total_recall_net
+
+networks:
+  total_recall_net:
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
