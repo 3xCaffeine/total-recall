@@ -4,3 +4,4 @@ export { JournalHeader } from "./journal-header";
 export { DateDisplay } from "./date-display";
 export { NavUser } from "./nav-user";
 export { SidebarNavMain, SidebarNavSecondary, SidebarLogo } from "./sidebar-nav";
+export { UnsavedChangesProvider, useUnsavedChanges } from "./unsaved-changes-provider";

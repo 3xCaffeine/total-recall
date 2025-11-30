@@ -1,15 +1,16 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ListIcon,
   Calendar,
-  Home,
+  NotebookPen,
   Settings,
   Focus,
   Brain,
   BotIcon,
+  Share2
 } from "lucide-react";
 
 import {
@@ -17,12 +18,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useUnsavedChanges } from "./unsaved-changes-provider";
 
 const navigationItems = [
   {
-    title: "Dashboard",
+    title: "Journal",
     url: "/dashboard",
-    icon: Home,
+    icon: NotebookPen,
   },
   {
     title: "Tasks",
@@ -44,6 +46,11 @@ const navigationItems = [
     url: "/dashboard/chat",
     icon: BotIcon,
   },
+  {
+    title: "Graph",
+    url: "/dashboard/graph",
+    icon: Share2,
+  },
 ];
 
 const secondaryItems = [
@@ -54,24 +61,51 @@ const secondaryItems = [
   },
 ];
 
+interface NavItemProps {
+  item: { title: string; url: string; icon: React.ComponentType<{ className?: string }> };
+  isActive: boolean;
+}
+
+function NavItem({ item, isActive }: NavItemProps) {
+  const router = useRouter();
+  const unsavedContext = useUnsavedChanges();
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (unsavedContext?.hasUnsavedChanges) {
+      e.preventDefault();
+      unsavedContext.confirmNavigation(() => {
+        router.push(item.url);
+      });
+    }
+  };
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={item.title}
+      >
+        <Link href={item.url} onClick={handleClick}>
+          <item.icon className="size-4" />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 export function SidebarNavMain() {
   const pathname = usePathname();
 
   return (
     <SidebarMenu>
       {navigationItems.map((item) => (
-        <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === item.url}
-            tooltip={item.title}
-          >
-            <Link href={item.url}>
-              <item.icon className="size-4" />
-              <span>{item.title}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <NavItem
+          key={item.title}
+          item={item}
+          isActive={pathname === item.url}
+        />
       ))}
     </SidebarMenu>
   );
@@ -83,29 +117,34 @@ export function SidebarNavSecondary() {
   return (
     <SidebarMenu>
       {secondaryItems.map((item) => (
-        <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === item.url}
-            tooltip={item.title}
-          >
-            <Link href={item.url}>
-              <item.icon className="size-4" />
-              <span>{item.title}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <NavItem
+          key={item.title}
+          item={item}
+          isActive={pathname === item.url}
+        />
       ))}
     </SidebarMenu>
   );
 }
 
 export function SidebarLogo() {
+  const router = useRouter();
+  const unsavedContext = useUnsavedChanges();
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (unsavedContext?.hasUnsavedChanges) {
+      e.preventDefault();
+      unsavedContext.confirmNavigation(() => {
+        router.push("/dashboard");
+      });
+    }
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" asChild>
-          <Link href="/dashboard">
+          <Link href="/dashboard" onClick={handleClick}>
             <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Brain className="size-4" />
             </div>
