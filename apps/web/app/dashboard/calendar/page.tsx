@@ -767,7 +767,7 @@ function EventCard({
             <h4 className="font-medium text-sm leading-tight line-clamp-2">
               {event.summary || "Untitled Event"}
             </h4>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
