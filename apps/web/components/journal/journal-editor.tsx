@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+import { useUnsavedChanges } from "./unsaved-changes-provider";
 
 // Dynamic import to avoid SSR issues with the markdown editor
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), {
@@ -32,9 +33,14 @@ export function JournalEditor({
 }: JournalEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [localUnsaved, setLocalUnsaved] = useState(false);
   const [previewMode, setPreviewMode] = useState<"edit" | "preview">("edit");
   const { resolvedTheme } = useTheme();
+  
+  // Try to use context, fallback to local state if not available
+  const unsavedContext = useUnsavedChanges();
+  const hasUnsavedChanges = unsavedContext ? unsavedContext.hasUnsavedChanges : localUnsaved;
+  const setHasUnsavedChanges = unsavedContext ? unsavedContext.setHasUnsavedChanges : setLocalUnsaved;
 
   // Word count (strip markdown syntax for more accurate count)
   const plainText = content
@@ -134,38 +140,39 @@ export function JournalEditor({
       </div>
 
       {/* Footer with save status and word count */}
-      <div className="flex items-center justify-between pt-4 border-t mt-4">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-col gap-3 pt-4 border-t mt-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Stats - Full width on mobile, left side on desktop */}
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground sm:justify-start">
           <span>{wordCount} words</span>
-          <span>{charCount} characters</span>
+          <span className="hidden sm:inline">{charCount} characters</span>
           {hasUnsavedChanges && (
-            <span className="text-amber-500">• Unsaved changes</span>
+            <span className="text-amber-500">• Unsaved</span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Actions - Full width on mobile, right side on desktop */}
+        <div className="flex items-center justify-center gap-2 sm:justify-end">
           <Toggle
             aria-label="Toggle preview"
             pressed={previewMode === "preview"}
             onPressedChange={(pressed) => setPreviewMode(pressed ? "preview" : "edit")}
             size="sm"
           >
-            <Eye />
-            Preview
+            <Eye className="size-4" />
+            <span className="hidden sm:inline ml-1">Preview</span>
           </Toggle>
 
           <Button
             size="sm"
             onClick={saveContent}
             disabled={isSaving || !hasUnsavedChanges}
-            className="gap-2"
           >
             {isSaving ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Save className="size-4" />
             )}
-            Save
+            <span className="hidden sm:inline ml-1">Save</span>
           </Button>
         </div>
       </div>

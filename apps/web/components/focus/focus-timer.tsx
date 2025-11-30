@@ -89,7 +89,7 @@ export function FocusTimer() {
   }, [timer]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-8 p-6">
+    <div className="flex flex-col items-center justify-center h-full gap-8 p-6">
       {/* Mode Toggle */}
       <Tabs value={timer.mode} onValueChange={handleModeChange}>
         <TabsList>

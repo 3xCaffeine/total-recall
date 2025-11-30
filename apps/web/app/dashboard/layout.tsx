@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { JournalSidebar } from "@/components/journal";
+import { DashboardProviders } from "./dashboard-providers";
 
 export default async function DashboardLayout({
   children,
@@ -24,10 +23,5 @@ export default async function DashboardLayout({
     avatar: session.user.image || "",
   };
 
-  return (
-    <SidebarProvider>
-      <JournalSidebar user={user} />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
-  );
+  return <DashboardProviders user={user}>{children}</DashboardProviders>;
 }
