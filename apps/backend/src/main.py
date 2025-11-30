@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import sys
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,16 +15,21 @@ from .api import v1
 
 settings = get_settings()
 
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan - startup and shutdown."""
-    # Startup
-    print("🚀 Starting up Total Recall Backend...")
+    # Startup - use stderr to ensure output shows in Docker logs
+    sys.stderr.write("🚀 Starting up Total Recall Backend...\n")
+    sys.stderr.flush()
     
     # Check for API key
     if not settings.GOOGLE_API_KEY or settings.GOOGLE_API_KEY == "":
-        print("⚠️  Warning: GOOGLE_API_KEY not set. LLM features will be disabled.")
+        sys.stderr.write("⚠️  Warning: GOOGLE_API_KEY not set. LLM features will be disabled.\n")
+        sys.stderr.flush()
         api_key_available = False
     else:
         api_key_available = True
@@ -31,10 +38,12 @@ async def lifespan(app: FastAPI):
     postgres_available = False
     try:
         await PostgresConnection.init(settings.POSTGRES_URL)
-        print("✓ PostgreSQL connected")
+        sys.stderr.write("✓ PostgreSQL connected\n")
+        sys.stderr.flush()
         postgres_available = True
     except Exception as e:
-        print(f"⚠️  PostgreSQL connection failed: {e}")
+        sys.stderr.write(f"⚠️  PostgreSQL connection failed: {e}\n")
+        sys.stderr.flush()
 
     neo4j_available = False
     try:
@@ -43,10 +52,12 @@ async def lifespan(app: FastAPI):
             settings.NEO4J_USER,
             settings.NEO4J_PASSWORD,
         )
-        print("✓ Neo4j connected")
+        sys.stderr.write("✓ Neo4j connected\n")
+        sys.stderr.flush()
         neo4j_available = True
     except Exception as e:
-        print(f"⚠️  Neo4j connection failed: {e}")
+        sys.stderr.write(f"⚠️  Neo4j connection failed: {e}\n")
+        sys.stderr.flush()
 
     # Initialize Cosdata client with gRPC parameters
     cosdata_available = False
@@ -58,10 +69,12 @@ async def lifespan(app: FastAPI):
     )
     try:
         await cosdata_client.init()
-        print("✓ Cosdata connected (gRPC)")
+        sys.stderr.write("✓✓✓ COSDATA CONNECTED ✓✓✓\n")
+        sys.stderr.flush()
         cosdata_available = True
     except Exception as e:
-        print(f"⚠️  Cosdata connection failed: {e}")
+        sys.stderr.write(f"⚠️  Cosdata connection failed: {e}\n")
+        sys.stderr.flush()
 
     # Initialize services only if API key is available
     vector_service = None
@@ -78,35 +91,41 @@ async def lifespan(app: FastAPI):
             )
             graph_service = GraphService(settings.GOOGLE_API_KEY)
             brain_service = BrainService(vector_service, graph_service, settings.GOOGLE_API_KEY)
-            print("✓ All services initialized")
+            sys.stderr.write("✓ All services initialized\n")
+            sys.stderr.flush()
         except Exception as e:
-            print(f"✗ Service initialization failed: {e}")
+            sys.stderr.write(f"✗ Service initialization failed: {e}\n")
+            sys.stderr.flush()
             vector_service = None
             graph_service = None
             brain_service = None
     else:
-        print("⚠️  Skipping service initialization (no API key)")
+        sys.stderr.write("⚠️  Skipping service initialization (no API key)\n")
+        sys.stderr.flush()
 
     # Register services with API routes (may be None)
     v1.set_services(brain_service, vector_service, graph_service)
 
     # Print status summary
-    print("\n📊 Backend Status:")
-    print(f"  Database Connections: {sum([postgres_available, neo4j_available, cosdata_available])}/3")
-    print(f"  Services Ready: {'✓ Yes' if all([vector_service, graph_service, brain_service]) else '⚠️  Partial/No'}")
-    print("🧠 Total Recall Backend is ready!\n")
+    sys.stderr.write("\n📊 Backend Status:\n")
+    sys.stderr.write(f"  Database Connections: {sum([postgres_available, neo4j_available, cosdata_available])}/3\n")
+    sys.stderr.write(f"  Services Ready: {'✓ Yes' if all([vector_service, graph_service, brain_service]) else '⚠️  Partial/No'}\n")
+    sys.stderr.write("🧠 Total Recall Backend is ready!\n\n")
+    sys.stderr.flush()
 
     yield
 
     # Shutdown
-    print("🛑 Shutting down Total Recall Backend...")
+    sys.stderr.write("🛑 Shutting down Total Recall Backend...\n")
+    sys.stderr.flush()
     if cosdata_available:
         await cosdata_client.close()
     if neo4j_available:
         await Neo4jConnection.close()
     if postgres_available:
         await PostgresConnection.close()
-    print("✓ All connections closed")
+    sys.stderr.write("✓ All connections closed\n")
+    sys.stderr.flush()
 
 
 app = FastAPI(

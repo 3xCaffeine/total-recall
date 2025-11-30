@@ -62,12 +62,15 @@ services:
   cosdata:
     image: cosdataio/cosdata:latest
     container_name: total_recall_cosdata
-    # If Cosdata adds env vars later, you can put them here.
+    volumes:
+      - cosdata_data:/root/.cosdata
     ports:
       - "8443:8443"     # HTTP API
       - "50051:50051"   # gRPC (if you use it later)
     networks:
       - total_recall_net
+    # First startup will prompt interactively for admin key
+    # Enter: test123 (twice)
 
 networks:
   total_recall_net:
@@ -76,3 +79,4 @@ volumes:
   postgres_data:
   neo4j_data:
   neo4j_logs:
+  cosdata_data:

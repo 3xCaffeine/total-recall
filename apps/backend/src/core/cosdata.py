@@ -48,12 +48,36 @@ class CosdataClient:
             return
 
         try:
-            # Initialize Cosdata client via HTTP
-            # Try without auth first (for local development with no auth set up)
-            self._client = Client(
-                host=f"http://{self.host}:8443",
-                verify=False,  # Disable SSL verification for local development
-            )
+            # Try multiple common passwords for Cosdata admin
+            passwords_to_try = [
+                "",  # empty password - Cosdata defaults to this!
+                "test123",
+                "cosdata123",
+                "admin",
+                "password",
+                "cosdata",
+            ]
+            
+            client = None
+            for password in passwords_to_try:
+                try:
+                    client = Client(
+                        host=f"http://{self.host}:8443",
+                        username="admin",
+                        password=password,
+                        verify=False,  # Disable SSL verification for local development
+                    )
+                    # Test the connection
+                    _ = client.list_collections()
+                    logger.info(f"✅ Cosdata authenticated successfully with password: {password if password else '(empty)'}")
+                    break
+                except Exception:
+                    continue
+            
+            if not client:
+                raise Exception("Failed to authenticate with any known password")
+            
+            self._client = client
             
             # Get or create collection
             try:
@@ -111,22 +135,44 @@ class CosdataClient:
         try:
             logger.debug(f"Upserting {len(vectors)} vectors to '{self.collection}'")
             
-            # Prepare vectors in Cosdata format
+            # Prepare vectors in Cosdata SDK format
             vectors_to_upsert = []
             for i, (vector, payload) in enumerate(zip(vectors, payloads)):
-                point_id = ids[i] if ids else str(i)
-                vectors_to_upsert.append({
+                point_id = ids[i] if ids else f"vec_{i}"
+                entry_id = payload.get("entry_id", point_id)
+                
+                # Create vector dict in correct SDK format
+                # Only include simple string/number metadata, not complex objects
+                vector_dict = {
                     "id": point_id,
                     "dense_values": vector,
-                    "document_id": payload.get("entry_id", point_id),
-                    "metadata": payload,
-                })
+                    "document_id": entry_id,
+                }
+                
+                # Add simple metadata only (strings and numbers, no lists/dicts)
+                if payload:
+                    simple_metadata = {}
+                    for k, v in payload.items():
+                        if isinstance(v, (str, int, float, bool)):
+                            simple_metadata[k] = v
+                    if simple_metadata:
+                        vector_dict["metadata"] = simple_metadata
+                
+                vectors_to_upsert.append(vector_dict)
+                logger.debug(f"Prepared vector {point_id}: {len(vector)} dimensions, doc_id={entry_id}")
             
-            # Use transaction for batch upsert
+            # Use transaction for batch upsert - each vector individually in transaction
             with self._collection_obj.transaction() as txn:
-                txn.batch_upsert_vectors(vectors_to_upsert, max_workers=4, max_retries=3)
+                for vec in vectors_to_upsert:
+                    try:
+                        logger.debug(f"Upserting vector {vec.get('id')} to Cosdata...")
+                        txn.upsert_vector(vec)
+                        logger.debug(f"Successfully upserted vector {vec.get('id')}")
+                    except Exception as e:
+                        logger.error(f"Failed to upsert vector {vec.get('id')}: {e}")
+                        raise
             
-            logger.debug(f"Successfully upserted {len(vectors_to_upsert)} vectors")
+            logger.info(f"✓ Successfully upserted {len(vectors_to_upsert)} vectors to Cosdata")
             return {
                 "status": "success",
                 "upserted_count": len(vectors_to_upsert),
