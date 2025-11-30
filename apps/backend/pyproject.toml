@@ -1,0 +1,22 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "valkey>=6.1.1",
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "google-genai>=0.1.0",
+    "neo4j>=5.14.0",
+    "asyncpg>=0.29.0",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.25.0",
+    "google-generativeai>=0.8.5",
+    "cosdata-sdk==0.2.5",
+    "celery>=5.6.0",
+]

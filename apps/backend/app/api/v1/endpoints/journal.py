@@ -1,0 +1,1 @@
+# CRUD for journal entries

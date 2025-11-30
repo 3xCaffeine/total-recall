@@ -1,0 +1,1 @@
+# FastAPI app instance and global configurations
