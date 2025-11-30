@@ -28,7 +28,9 @@ class Settings:
         self.NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
         self.NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
         self.NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-        self.COSDATA_URL = os.getenv("COSDATA_URL", "http://localhost:8000")
+        # Cosdata gRPC Config (replaces HTTP)
+        self.COSDATA_HOST = os.getenv("COSDATA_HOST", "localhost")
+        self.COSDATA_PORT = int(os.getenv("COSDATA_PORT", "50051"))
 
         # AI/LLM Config
         self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
@@ -39,7 +41,7 @@ class Settings:
 
         # Vector DB Config
         self.COSDATA_COLLECTION = os.getenv("COSDATA_COLLECTION", "journal_entries")
-        self.COSDATA_TIMEOUT = int(os.getenv("COSDATA_TIMEOUT", "30"))
+        self.COSDATA_VECTOR_DIM = int(os.getenv("COSDATA_VECTOR_DIM", "768"))
 
         # Auth
         self.SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")

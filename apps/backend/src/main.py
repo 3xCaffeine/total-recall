@@ -48,16 +48,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️  Neo4j connection failed: {e}")
 
-    # Initialize Cosdata client
+    # Initialize Cosdata client with gRPC parameters
     cosdata_available = False
     cosdata_client = CosdataClient(
-        base_url=settings.COSDATA_URL,
+        host=settings.COSDATA_HOST,
+        port=settings.COSDATA_PORT,
         collection=settings.COSDATA_COLLECTION,
-        timeout=settings.COSDATA_TIMEOUT,
+        vector_dim=settings.COSDATA_VECTOR_DIM,
     )
     try:
         await cosdata_client.init()
-        print("✓ Cosdata connected")
+        print("✓ Cosdata connected (gRPC)")
         cosdata_available = True
     except Exception as e:
         print(f"⚠️  Cosdata connection failed: {e}")

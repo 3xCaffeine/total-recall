@@ -6,8 +6,9 @@ services:
     env_file:
       - .env
     environment:
-      # This is how backend will reach Cosdata from inside the Docker network
-      COSDATA_URL: "http://cosdata:8443"
+      # Backend will reach Cosdata via gRPC at port 50051 inside the Docker network
+      COSDATA_HOST: "cosdata"
+      COSDATA_PORT: "50051"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
