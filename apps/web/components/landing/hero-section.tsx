@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { HoverEffect } from "@/components/ui/card-hover-effect";
+import { FlipWords } from "@/components/ui/flip-words";
+import { Badge } from "@/components/ui/badge";
 
 const features = [
   {
@@ -84,22 +86,22 @@ export function HeroSection() {
     <>
       {/* Hero */}
       <section className="relative flex min-h-auto w-full flex-col items-start justify-start overflow-hidden">
-        <BackgroundRippleEffect rows={6} />
+        <BackgroundRippleEffect rows={10} />
 
         {/* Content */}
         <div className="relative z-10 mx-auto max-w-2xl px-6 text-center pt-24">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border bg-background/80 px-4 py-2 text-sm backdrop-blur-sm">
+          <Badge className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background/80 px-4 py-2 text-md backdrop-blur-sm">
             <Brain className="size-4 text-primary" />
             <span className="text-muted-foreground">Your second brain</span>
-          </div>
+          </Badge>
 
-          <h1 className="mb-6 text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl">
-            Never forget
+          <h1 className="mb-6 text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl text-center">
+            Remember every
             <br />
-            <span className="text-muted-foreground">a thing</span>
+            <FlipWords words={["Thing", "Project", "Person", "Task", "Concept", "Tag", "Entity"]} className="text-muted-foreground" />
           </h1>
 
-          <p className="mx-auto mb-10 max-w-md text-lg text-muted-foreground">
+          <p className="mx-auto mb-8 mt-12 max-w-md text-lg text-muted-foreground">
             Journal your thoughts. Manage your time.
             <br />
             All in one place.
@@ -115,7 +117,7 @@ export function HeroSection() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="w-full mt-24">
+      <section id="features" className="w-full py-24">
         <div className="mx-auto max-w-full px-6">
           <div className="mb-8 text-center">
             <h2 className="mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Brain, Github } from "lucide-react";
+import { Brain, Github, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   Navbar,
   NavBody,
@@ -26,6 +27,7 @@ const navItems = [
   {
     name: "GitHub",
     link: "https://github.com/3xCaffeine/total-recall",
+    icon: <Github className="size-4" />,
   },
 ];
 
@@ -40,6 +42,34 @@ function Logo() {
   );
 }
 
+function ThemeToggle({ className }: { className?: string }) {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="size-9" />;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className={`relative size-9 flex items-center justify-center rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors ${className}`}
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {theme === "dark" ? (
+        <Sun className="size-5" />
+      ) : (
+        <Moon className="size-5" />
+      )}
+    </button>
+  );
+}
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,7 +80,8 @@ export function Header() {
         <NavBody>
           <Logo />
           <NavItems items={navItems} />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <NavbarButton variant="secondary" href="/login">
               Sign In
             </NavbarButton>
@@ -64,10 +95,13 @@ export function Header() {
         <MobileNav>
           <MobileNavHeader>
             <Logo />
-            <MobileNavToggle
-              isOpen={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <MobileNavToggle
+                isOpen={isMobileMenuOpen}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              />
+            </div>
           </MobileNavHeader>
 
           <MobileNavMenu

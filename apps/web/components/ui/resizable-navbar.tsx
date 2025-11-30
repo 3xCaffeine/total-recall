@@ -27,6 +27,7 @@ interface NavItemsProps {
   items: {
     name: string;
     link: string;
+    icon?: React.ReactNode;
   }[];
   className?: string;
   onItemClick?: () => void;
@@ -128,7 +129,10 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <a
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300"
+          className={cn(
+            "relative px-4 py-2 text-neutral-600 dark:text-neutral-300",
+            item.name === "GitHub" && "hover:text-[#2dba4e]"
+          )}
           key={`link-${idx}`}
           href={item.link}
         >
@@ -138,7 +142,10 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
               className="absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800"
             />
           )}
-          <span className="relative z-20">{item.name}</span>
+          <span className={cn("relative z-20 flex items-center gap-2", item.name === "GitHub" && hovered === idx && "text-[#2dba4e]")}>
+            {item.icon}
+            {item.name}
+          </span>
         </a>
       ))}
     </motion.div>
