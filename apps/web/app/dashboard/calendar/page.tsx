@@ -131,7 +131,7 @@ function formatTimeRange(event: CalendarEvent): string {
   if (event.start.date && !event.start.dateTime) {
     // All-day event
     const start = new Date(event.start.date);
-    const end = new Date(event.end.date);
+    const end = new Date(event.end.date!);
     const daysDiff = (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000);
     if (daysDiff > 1) {
       const endDisplay = new Date(end.getTime() - 24 * 60 * 60 * 1000);
