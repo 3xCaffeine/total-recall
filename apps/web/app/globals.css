@@ -1,26 +1,238 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  .container {
+    @apply mx-auto px-4;
+  }
 }
+
+@theme inline {
+  --animate-cell-ripple: cell-ripple var(--duration, 200ms) ease-out none 1
+  var(--delay, 0ms);
+
+  @keyframes cell-ripple {
+    0% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.4;
+    }
+  }
+}
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.625rem;
+
+  /* Light Mode - Based on Pure White & Clarity Blue */
+  --background: oklch(1 0 0); /* Pure White */
+  --foreground: oklch(0.25 0 0); /* Charcoal text */
+
+  --card: oklch(1 0 0); /* Pure White */
+  --card-foreground: oklch(0.25 0 0); /* Charcoal */
+
+  --popover: oklch(1 0 0); /* Pure White */
+  --popover-foreground: oklch(0.25 0 0); /* Charcoal */
+
+  /* Clarity Blue as Primary */
+  --primary: oklch(0.55 0.22 264); /* Clarity Blue #3B5BFF */
+  --primary-foreground: oklch(1 0 0); /* White text on blue */
+
+  /* Cool Grey as Secondary */
+  --secondary: oklch(0.92 0.005 260); /* Light grey background */
+  --secondary-foreground: oklch(0.45 0.01 260); /* Cool Grey text */
+
+  --muted: oklch(0.96 0.003 260); /* Very light grey */
+  --muted-foreground: oklch(0.52 0.015 260); /* Cool Grey #6B7280 */
+
+  --accent: oklch(0.94 0.008 260); /* Light grey-blue accent */
+  --accent-foreground: oklch(0.55 0.22 264); /* Clarity Blue */
+
+  --destructive: oklch(0.58 0.22 25); /* Red for destructive actions */
+
+  --border: oklch(0.90 0.005 260); /* Light border */
+  --input: oklch(0.90 0.005 260); /* Input border */
+  --ring: oklch(0.55 0.22 264); /* Clarity Blue focus ring */
+
+  /* Charts using the color palette */
+  --chart-1: oklch(0.55 0.22 264); /* Clarity Blue */
+  --chart-2: oklch(0.60 0.18 180); /* Teal */
+  --chart-3: oklch(0.68 0.20 140); /* Green */
+  --chart-4: oklch(0.65 0.20 50); /* Yellow */
+  --chart-5: oklch(0.60 0.20 320); /* Purple */
+
+  /* Sidebar */
+  --sidebar: oklch(0.99 0 0); /* Off-white */
+  --sidebar-foreground: oklch(0.25 0 0); /* Charcoal */
+  --sidebar-primary: oklch(0.55 0.22 264); /* Clarity Blue */
+  --sidebar-primary-foreground: oklch(1 0 0); /* White */
+  --sidebar-accent: oklch(0.94 0.008 260); /* Light grey-blue */
+  --sidebar-accent-foreground: oklch(0.25 0 0); /* Charcoal */
+  --sidebar-border: oklch(0.90 0.005 260); /* Light border */
+  --sidebar-ring: oklch(0.55 0.22 264); /* Clarity Blue */
+}
+
+.dark {
+  /* Dark Mode - Based on Charcoal & Clarity Blue */
+  --background: oklch(0.20 0.005 260); /* Charcoal #1F1F1F */
+  --foreground: oklch(0.95 0.005 260); /* Near white */
+
+  --card: oklch(0.25 0.008 260); /* Slightly lighter charcoal */
+  --card-foreground: oklch(0.95 0.005 260); /* Near white */
+
+  --popover: oklch(0.23 0.008 260); /* Dark card */
+  --popover-foreground: oklch(0.95 0.005 260); /* Near white */
+
+  /* Clarity Blue remains vibrant in dark mode */
+  --primary: oklch(0.60 0.24 264); /* Brighter Clarity Blue for dark bg */
+  --primary-foreground: oklch(0.98 0 0); /* White */
+
+  /* Cool Grey adjusted for dark mode */
+  --secondary: oklch(0.30 0.01 260); /* Dark grey */
+  --secondary-foreground: oklch(0.85 0.01 260); /* Light grey text */
+
+  --muted: oklch(0.28 0.01 260); /* Muted dark grey */
+  --muted-foreground: oklch(0.65 0.02 260); /* Cool Grey for dark mode */
+
+  --accent: oklch(0.32 0.015 260); /* Accent background */
+  --accent-foreground: oklch(0.65 0.24 264); /* Lighter Clarity Blue */
+
+  --destructive: oklch(0.65 0.25 25); /* Brighter red for dark mode */
+
+  --border: oklch(0.35 0.015 260); /* Subtle border */
+  --input: oklch(0.35 0.015 260); /* Input border */
+  --ring: oklch(0.60 0.24 264); /* Clarity Blue focus ring */
+
+  /* Charts adjusted for dark mode visibility */
+  --chart-1: oklch(0.60 0.24 264); /* Clarity Blue */
+  --chart-2: oklch(0.65 0.20 180); /* Teal */
+  --chart-3: oklch(0.70 0.22 140); /* Green */
+  --chart-4: oklch(0.75 0.22 80); /* Yellow */
+  --chart-5: oklch(0.65 0.22 320); /* Purple */
+
+  /* Sidebar for dark mode */
+  --sidebar: oklch(0.22 0.008 260); /* Dark sidebar */
+  --sidebar-foreground: oklch(0.92 0.005 260); /* Light text */
+  --sidebar-primary: oklch(0.60 0.24 264); /* Clarity Blue */
+  --sidebar-primary-foreground: oklch(0.98 0 0); /* White */
+  --sidebar-accent: oklch(0.30 0.015 260); /* Dark accent */
+  --sidebar-accent-foreground: oklch(0.92 0.005 260); /* Light text */
+  --sidebar-border: oklch(0.35 0.015 260); /* Subtle border */
+  --sidebar-ring: oklch(0.60 0.24 264); /* Clarity Blue */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Markdown Editor Styles */
+.w-md-editor {
+  --md-editor-background-color: transparent !important;
+  background-color: transparent !important;
+}
+
+.w-md-editor-text-pre > code,
+.w-md-editor-text-input {
+  font-size: 1.125rem !important;
+  line-height: 1.75 !important;
+  font-family: inherit !important;
+}
+
+.w-md-editor-text-input::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 0.5 !important;
+}
+
+.wmde-markdown {
+  font-size: 1.125rem !important;
+  line-height: 1.75 !important;
+  background-color: transparent !important;
+  font-family: inherit !important;
+}
+
+.wmde-markdown h1,
+.wmde-markdown h2,
+.wmde-markdown h3 {
+  border-bottom: none !important;
+  margin-top: 1.5em !important;
+  margin-bottom: 0.5em !important;
+}
+
+.wmde-markdown p {
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown code {
+  background-color: var(--muted) !important;
+  padding: 0.125rem 0.375rem !important;
+  border-radius: 0.25rem !important;
+}
+
+.wmde-markdown pre {
+  background-color: var(--muted) !important;
+  border-radius: 0.5rem !important;
+  padding: 1rem !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown,
+[data-color-mode="dark"] .w-md-editor-text-pre > code,
+[data-color-mode="dark"] .w-md-editor-text-input {
+  color: var(--foreground) !important;
+}
+
+[data-color-mode="light"] .wmde-markdown,
+[data-color-mode="light"] .w-md-editor-text-pre > code,
+[data-color-mode="light"] .w-md-editor-text-input {
+  color: var(--foreground) !important;
 }
