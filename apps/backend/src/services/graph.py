@@ -1,7 +1,7 @@
 """Graph database service for managing entities and relationships."""
 import uuid
 from typing import List, Dict, Any, Optional
-from google import genai
+import google.generativeai as genai
 from pydantic import BaseModel
 from ..core.neo4j import Neo4jConnection
 
@@ -29,14 +29,15 @@ class GraphService:
         """Initialize graph service."""
         self.model = model
         self.google_api_key = google_api_key
-        self.client = None
+        self.client_available = False
         
         if google_api_key:
             try:
-                self.client = genai.Client(api_key=google_api_key)
+                genai.configure(api_key=google_api_key)
+                self.client_available = True
             except Exception as e:
                 print(f"Warning: Failed to initialize Gemini client: {e}")
-                self.client = None
+                self.client_available = False
 
     async def extract_entities_and_relationships(
         self,
@@ -45,7 +46,7 @@ class GraphService:
     ) -> tuple[List[Entity], List[Relationship]]:
         """Extract entities and relationships from text using Gemini."""
         
-        if not self.client:
+        if not self.client_available:
             print("Warning: Gemini client not available, returning empty entities")
             return [], []
         
@@ -69,10 +70,7 @@ class GraphService:
         }}
         """
 
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-        )
+        response = genai.GenerativeModel(self.model).generate_content(prompt)
         result_text = response.text
 
         # Parse JSON response
@@ -150,7 +148,7 @@ class GraphService:
     async def extract_tasks(self, text: str) -> List[Dict[str, Any]]:
         """Extract tasks/TODOs from text using Gemini."""
         
-        if not self.client:
+        if not self.client_available:
             return []
         
         prompt = f"""
@@ -165,10 +163,7 @@ class GraphService:
         ]
         """
 
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-        )
+        response = genai.GenerativeModel(self.model).generate_content(prompt)
         result_text = response.text
 
         import json

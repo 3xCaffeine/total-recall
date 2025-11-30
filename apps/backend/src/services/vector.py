@@ -2,7 +2,7 @@
 import uuid
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from google import genai
+import google.generativeai as genai
 from ..core.cosdata import CosdataClient
 
 
@@ -14,24 +14,25 @@ class VectorService:
         self.cosdata = cosdata_client
         self.embedding_model = embedding_model
         self.google_api_key = google_api_key
-        self.client = None
+        self.client_available = False
         
         if google_api_key:
             try:
-                self.client = genai.Client(api_key=google_api_key)
+                genai.configure(api_key=google_api_key)
+                self.client_available = True
             except Exception as e:
                 print(f"Warning: Failed to initialize Gemini client: {e}")
-                self.client = None
+                self.client_available = False
 
     async def embed_text(self, text: str) -> List[float]:
         """Generate embedding for text using Google's embedding model."""
-        if not self.client:
+        if not self.client_available:
             raise RuntimeError("Gemini client not initialized. Set GOOGLE_API_KEY environment variable.")
-        response = self.client.models.embed_content(
+        response = genai.embed_content(
             model=self.embedding_model,
             content=text,
         )
-        return response.embedding
+        return response["embedding"]
 
     async def upsert_entry(
         self,
@@ -51,7 +52,7 @@ class VectorService:
         # Generate embedding
         embedding = await self.embed_text(content)
 
-        # Upsert to Cosdata
+        # Upsert to Cosdata (gracefully handle if unavailable)
         payload = {
             "entry_id": entry_id,
             "user_id": user_id,
@@ -61,11 +62,15 @@ class VectorService:
             "source": source,
         }
 
-        await self.cosdata.upsert(
-            vectors=[embedding],
-            payloads=[payload],
-            ids=[entry_id],
-        )
+        try:
+            await self.cosdata.upsert(
+                vectors=[embedding],
+                payloads=[payload],
+                ids=[entry_id],
+            )
+        except Exception as e:
+            print(f"Warning: Failed to upsert to Cosdata: {e}")
+            # Continue without Cosdata - entry will be stored in Postgres by caller
 
         return entry_id
 
@@ -77,23 +82,28 @@ class VectorService:
         score_threshold: float = 0.0,
     ) -> List[Dict[str, Any]]:
         """Search for entries similar to query."""
-        # Generate embedding for query
-        query_embedding = await self.embed_text(query)
+        try:
+            # Generate embedding for query
+            query_embedding = await self.embed_text(query)
 
-        # Search in Cosdata
-        results = await self.cosdata.search(
-            query_vector=query_embedding,
-            limit=limit,
-            score_threshold=score_threshold,
-        )
+            # Search in Cosdata (gracefully handle if unavailable)
+            results = await self.cosdata.search(
+                query_vector=query_embedding,
+                limit=limit,
+                score_threshold=score_threshold,
+            )
 
-        # Filter by user_id
-        user_results = [
-            r for r in results
-            if r.get("payload", {}).get("user_id") == user_id
-        ]
+            # Filter by user_id
+            user_results = [
+                r for r in results
+                if r.get("payload", {}).get("user_id") == user_id
+            ]
 
-        return user_results
+            return user_results
+        except Exception as e:
+            print(f"Warning: Cosdata search failed: {e}")
+            # Return empty results if Cosdata unavailable
+            return []
 
     async def hybrid_search(
         self,
@@ -103,16 +113,26 @@ class VectorService:
         alpha: float = 0.5,
     ) -> List[Dict[str, Any]]:
         """Hybrid search combining dense and sparse retrieval."""
-        query_embedding = await self.embed_text(query)
-        
-        results = await self.cosdata.hybrid_search(
-            query_vector=query_embedding,
-            query_text=query,
-            limit=limit,
-            alpha=alpha,
-        )
+        try:
+            query_embedding = await self.embed_text(query)
+            
+            results = await self.cosdata.hybrid_search(
+                query_vector=query_embedding,
+                query_text=query,
+                limit=limit,
+                alpha=alpha,
+            )
 
-        # Filter by user_id
+            # Filter by user_id
+            user_results = [
+                r for r in results
+                if r.get("payload", {}).get("user_id") == user_id
+            ]
+
+            return user_results
+        except Exception as e:
+            print(f"Warning: Cosdata hybrid search failed: {e}")
+            return []
         user_results = [
             r for r in results
             if r.get("payload", {}).get("user_id") == user_id
