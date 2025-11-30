@@ -129,31 +129,47 @@ function formatEventTime(event: CalendarEvent): string {
 
 function formatTimeRange(event: CalendarEvent): string {
   if (event.start.date && !event.start.dateTime) {
-    return "All day";
+    // All-day event
+    const start = new Date(event.start.date);
+    const end = new Date(event.end.date);
+    const daysDiff = (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000);
+    if (daysDiff > 1) {
+      const endDisplay = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    } else {
+      return "All day";
+    }
   }
 
+  // Timed event
   const start = event.start.dateTime;
   const end = event.end.dateTime;
-  if (!start) return "";
+  if (!start || !end) return "";
 
   const startDate = new Date(start);
-  const startTime = startDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const endDate = new Date(end);
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
 
-  if (end) {
-    const endDate = new Date(end);
+  if (startDateStr === endDateStr) {
+    // Same day
+    const startTime = startDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
     const endTime = endDate.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     });
     return `${startTime} – ${endTime}`;
+  } else {
+    // Multi-day
+    const startFormatted = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+    const endFormatted = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${startFormatted} - ${endFormatted}`;
   }
-
-  return startTime;
 }
 
 function getDateKey(date: Date): string {
@@ -168,9 +184,16 @@ function getEventsForDate(
 ): CalendarEvent[] {
   const dateKey = getDateKey(new Date(year, month, day));
   return events.filter((event) => {
-    const eventDate = event.start.dateTime || event.start.date;
-    if (!eventDate) return false;
-    return eventDate.startsWith(dateKey);
+    if (event.start.date && event.end.date) {
+      // All-day event: spans from start.date to end.date (exclusive)
+      return dateKey >= event.start.date && dateKey < event.end.date;
+    } else if (event.start.dateTime && event.end.dateTime) {
+      // Timed event: spans from start date to end date (inclusive)
+      const startDate = event.start.dateTime.split('T')[0];
+      const endDate = event.end.dateTime.split('T')[0];
+      return dateKey >= startDate && dateKey <= endDate;
+    }
+    return false;
   });
 }
 
@@ -307,7 +330,11 @@ export default function CalendarPage() {
       : new Date(event.start.date + "T09:00");
     const endDate = event.end.dateTime
       ? new Date(event.end.dateTime)
-      : new Date(event.end.date + "T10:00");
+      : (() => {
+          const end = new Date(event.end.date!);
+          end.setDate(end.getDate() - 1); // Adjust for all-day end date
+          return new Date(end.toISOString().split('T')[0] + "T10:00");
+        })();
 
     setFormData({
       summary: event.summary || "",
@@ -324,6 +351,14 @@ export default function CalendarPage() {
   const handleSaveEvent = async () => {
     if (!formData.summary.trim()) {
       toast.error("Please enter an event title");
+      return;
+    }
+
+    const startDate = new Date(formData.startDateTime);
+    const endDate = new Date(formData.endDateTime);
+
+    if (startDate >= endDate) {
+      toast.error("Start time must be before end time");
       return;
     }
 
