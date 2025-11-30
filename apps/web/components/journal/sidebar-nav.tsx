@@ -10,6 +10,7 @@ import {
   Focus,
   Brain,
   BotIcon,
+  Share2
 } from "lucide-react";
 
 import {
@@ -43,6 +44,11 @@ const navigationItems = [
     title: "Chat",
     url: "/dashboard/chat",
     icon: BotIcon,
+  },
+  {
+    title: "Graph",
+    url: "/dashboard/graph",
+    icon: Share2,
   },
 ];
 
