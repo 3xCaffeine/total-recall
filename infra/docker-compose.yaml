@@ -60,17 +60,20 @@ services:
       - total_recall_net
 
   cosdata:
-    image: cosdataio/cosdata:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.cosdata
     container_name: total_recall_cosdata
     volumes:
       - cosdata_data:/root/.cosdata
     ports:
       - "8443:8443"     # HTTP API
-      - "50051:50051"   # gRPC (if you use it later)
+      - "50051:50051"   # gRPC
+    environment:
+      ADMIN_KEY: "test123"  # Set your desired admin key here (change from default)
+    entrypoint: ["/app/cosdata-entrypoint.sh"]  # Your script is now inside the image
     networks:
       - total_recall_net
-    # First startup will prompt interactively for admin key
-    # Enter: test123 (twice)
 
 networks:
   total_recall_net:
