@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.journal import router as journal_router
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -29,6 +30,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(journal_router, prefix="/api/v1/journal", tags=["journal"])
 
 
 @app.get("/health")
