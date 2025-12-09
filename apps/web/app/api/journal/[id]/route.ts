@@ -58,9 +58,9 @@ async function proxyToBackend(
 // GET /api/journal/[id] - Get a specific journal entry
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const entryId = params.id;
+  const { id: entryId } = await params;
 
   // Validate entry ID
   const id = parseInt(entryId);
@@ -77,9 +77,9 @@ export async function GET(
 // PUT /api/journal/[id] - Update a journal entry
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const entryId = params.id;
+  const { id: entryId } = await params;
 
   // Validate entry ID
   const id = parseInt(entryId);
@@ -121,9 +121,9 @@ export async function PUT(
 // DELETE /api/journal/[id] - Delete a journal entry
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const entryId = params.id;
+  const { id: entryId } = await params;
 
   // Validate entry ID
   const id = parseInt(entryId);
