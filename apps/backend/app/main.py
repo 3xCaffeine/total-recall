@@ -2,6 +2,12 @@
 FastAPI application instance and global configurations.
 """
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.v1.endpoints.auth import router as auth_router
+from app.core.config import get_settings
+
+settings = get_settings()
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -11,6 +17,18 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# CORS middleware for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_url],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 
 
 @app.get("/health")
