@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.journal_entry import JournalEntry
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 from app.services.ai_service import AIService
-from app.tasks.ai_tasks import ingest_vectors_to_cosdata
+from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction
 
 
 class JournalService:
@@ -49,6 +49,10 @@ class JournalService:
             ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
+            # Trigger todo processing task
+            process_todos_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
+            # Trigger calendar events processing task
+            process_calendar_events_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
             
         except ValueError:
             # Handle extraction failure, perhaps set status to failed
@@ -75,6 +79,10 @@ class JournalService:
             # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
+            # Trigger todo processing task
+            process_todos_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
+            # Trigger calendar events processing task
+            process_calendar_events_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
         except ValueError:
             # Handle extraction failure
             pass
