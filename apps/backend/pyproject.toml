@@ -28,4 +28,5 @@ dependencies = [
     "cosdata-fastembed>=0.7.1",
     "neomodel>=6.0.0",
     "redis>=7.1.0",
+    "cosdata-client>=0.2.2",
 ]
