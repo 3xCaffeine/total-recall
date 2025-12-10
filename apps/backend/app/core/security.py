@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.auth import User, Session as AuthSession
+from app.models.auth import User, Session as AuthSession, Account
 
 
 def verify_session_token(
@@ -41,7 +41,12 @@ def verify_session_token(
     )
 
     result = db.execute(stmt)
-    session_row, user_row = result.first() or (None, None)
+    row = result.first()
+    
+    if not row:
+        return None
+    
+    session_row, user_row = row
 
     if not session_row or not user_row:
         return None
@@ -50,11 +55,23 @@ def verify_session_token(
     if session_row.expiresAt < datetime.now(timezone.utc):
         return None
 
+    # Query Google account for OAuth tokens
+    account_stmt = (
+        select(Account)
+        .where(Account.userId == user_row.id)
+        .where(Account.providerId == "google")
+    )
+    account_result = db.execute(account_stmt)
+    account_row = account_result.scalar_one_or_none()
+
     user_data = {
         "id": user_row.id,
         "email": user_row.email,
         "name": user_row.name,
         "image": user_row.image,
         "email_verified": user_row.emailVerified,
+        "google_access_token": account_row.accessToken if account_row else None,
+        "google_refresh_token": account_row.refreshToken if account_row else None,
+        "google_token_expiry": account_row.accessTokenExpiresAt if account_row else None,
     }
     return user_data
