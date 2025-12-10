@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export interface GraphNode {
   id: string;
   name: string;
-  type: 'JournalEntry' | 'JournalChunk' | 'Concept' | 'Entity' | 'Project' | 'Task' | 'Person' | 'Tag';
+  type: 'JournalEntry' | 'JournalChunk' | 'Concept' | 'Entity' | 'Project' | 'Task' | 'Person' | 'Tag' | 'Event';
   val: number;
   color?: string;
   status?: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
@@ -23,277 +23,108 @@ export interface GraphData {
   links: GraphLink[];
 }
 
-// Sample data for demonstration - replace with actual database queries
-const sampleGraphData: GraphData = {
-  nodes: [
-    // Journal Entries
-    {
-      id: "entry_1",
-      name: "My Day at the AI Conference",
-      type: "JournalEntry",
-      val: 12,
-      metadata: { date: "2024-11-28", wordCount: 1500 }
-    },
-    {
-      id: "entry_2",
-      name: "Learning React Server Components",
-      type: "JournalEntry",
-      val: 10,
-      metadata: { date: "2024-11-27", wordCount: 1200 }
-    },
-    {
-      id: "entry_3",
-      name: "Planning Q4 Goals",
-      type: "JournalEntry",
-      val: 8,
-      metadata: { date: "2024-11-26", wordCount: 800 }
-    },
-    {
-      id: "entry_4",
-      name: "Coffee Chat with Sarah",
-      type: "JournalEntry",
-      val: 6,
-      metadata: { date: "2024-11-25", wordCount: 600 }
-    },
-    {
-      id: "entry_5",
-      name: "Deep Work Session on Graph Viz",
-      type: "JournalEntry",
-      val: 9,
-      metadata: { date: "2024-11-24", wordCount: 950 }
-    },
-
-    // Journal Chunks
-    {
-      id: "chunk_1",
-      name: "AI keynote highlights",
-      type: "JournalChunk",
-      val: 4,
-    },
-    {
-      id: "chunk_2",
-      name: "RSC performance insights",
-      type: "JournalChunk",
-      val: 4,
-    },
-    {
-      id: "chunk_3",
-      name: "Q4 OKR definitions",
-      type: "JournalChunk",
-      val: 4,
-    },
-
-    // Concepts
-    {
-      id: "concept_ai",
-      name: "Artificial Intelligence",
-      type: "Concept",
-      val: 15,
-    },
-    {
-      id: "concept_ml",
-      name: "Machine Learning",
-      type: "Concept",
-      val: 12,
-    },
-    {
-      id: "concept_llm",
-      name: "Large Language Models",
-      type: "Concept",
-      val: 10,
-    },
-    {
-      id: "concept_react",
-      name: "React",
-      type: "Concept",
-      val: 11,
-    },
-    {
-      id: "concept_nextjs",
-      name: "Next.js",
-      type: "Concept",
-      val: 9,
-    },
-    {
-      id: "concept_productivity",
-      name: "Productivity",
-      type: "Concept",
-      val: 8,
-    },
-
-    // Entities
-    {
-      id: "entity_openai",
-      name: "OpenAI",
-      type: "Entity",
-      val: 8,
-    },
-    {
-      id: "entity_vercel",
-      name: "Vercel",
-      type: "Entity",
-      val: 7,
-    },
-
-    // Projects
-    {
-      id: "project_total_recall",
-      name: "Total Recall App",
-      type: "Project",
-      val: 14,
-      metadata: { status: "active", progress: 65 }
-    },
-    {
-      id: "project_blog",
-      name: "Personal Blog",
-      type: "Project",
-      val: 8,
-      metadata: { status: "active", progress: 30 }
-    },
-
-    // Tasks
-    {
-      id: "task_1",
-      name: "Implement graph visualization",
-      type: "Task",
-      val: 7,
-      status: "IN_PROGRESS",
-    },
-    {
-      id: "task_2",
-      name: "Write blog post about AI conference",
-      type: "Task",
-      val: 5,
-      status: "OPEN",
-    },
-    {
-      id: "task_3",
-      name: "Review Q4 OKRs with team",
-      type: "Task",
-      val: 6,
-      status: "COMPLETED",
-    },
-    {
-      id: "task_4",
-      name: "Update portfolio website",
-      type: "Task",
-      val: 4,
-      status: "OPEN",
-    },
-
-    // People
-    {
-      id: "person_sarah",
-      name: "Sarah Chen",
-      type: "Person",
-      val: 7,
-      metadata: { relationship: "colleague" }
-    },
-    {
-      id: "person_alex",
-      name: "Alex Rivera",
-      type: "Person",
-      val: 6,
-      metadata: { relationship: "mentor" }
-    },
-
-    // Tags
-    {
-      id: "tag_tech",
-      name: "#technology",
-      type: "Tag",
-      val: 10,
-    },
-    {
-      id: "tag_learning",
-      name: "#learning",
-      type: "Tag",
-      val: 8,
-    },
-    {
-      id: "tag_work",
-      name: "#work",
-      type: "Tag",
-      val: 9,
-    },
-    {
-      id: "tag_ideas",
-      name: "#ideas",
-      type: "Tag",
-      val: 6,
-    },
-  ],
-  links: [
-    // Entry 1 connections (AI Conference)
-    { source: "entry_1", target: "chunk_1", type: "HAS_CHUNK" },
-    { source: "entry_1", target: "concept_ai", type: "MENTIONS_ENTITY" },
-    { source: "entry_1", target: "concept_ml", type: "MENTIONS_ENTITY" },
-    { source: "entry_1", target: "concept_llm", type: "MENTIONS_ENTITY" },
-    { source: "entry_1", target: "entity_openai", type: "MENTIONS_ENTITY" },
-    { source: "entry_1", target: "task_2", type: "CONTAINS_TASK" },
-    { source: "entry_1", target: "tag_tech", type: "RELATED_TO" },
-    { source: "entry_1", target: "tag_learning", type: "RELATED_TO" },
-
-    // Entry 2 connections (React Server Components)
-    { source: "entry_2", target: "chunk_2", type: "HAS_CHUNK" },
-    { source: "entry_2", target: "concept_react", type: "MENTIONS_ENTITY" },
-    { source: "entry_2", target: "concept_nextjs", type: "MENTIONS_ENTITY" },
-    { source: "entry_2", target: "entity_vercel", type: "MENTIONS_ENTITY" },
-    { source: "entry_2", target: "project_total_recall", type: "PART_OF_PROJECT" },
-    { source: "entry_2", target: "tag_tech", type: "RELATED_TO" },
-
-    // Entry 3 connections (Q4 Goals)
-    { source: "entry_3", target: "chunk_3", type: "HAS_CHUNK" },
-    { source: "entry_3", target: "concept_productivity", type: "MENTIONS_ENTITY" },
-    { source: "entry_3", target: "task_3", type: "CONTAINS_TASK" },
-    { source: "entry_3", target: "tag_work", type: "RELATED_TO" },
-    { source: "entry_3", target: "person_alex", type: "MENTIONS_ENTITY" },
-
-    // Entry 4 connections (Coffee Chat)
-    { source: "entry_4", target: "person_sarah", type: "MENTIONS_ENTITY" },
-    { source: "entry_4", target: "concept_ai", type: "MENTIONS_ENTITY" },
-    { source: "entry_4", target: "tag_work", type: "RELATED_TO" },
-
-    // Entry 5 connections (Graph Viz)
-    { source: "entry_5", target: "project_total_recall", type: "PART_OF_PROJECT" },
-    { source: "entry_5", target: "task_1", type: "CONTAINS_TASK" },
-    { source: "entry_5", target: "concept_react", type: "MENTIONS_ENTITY" },
-    { source: "entry_5", target: "tag_ideas", type: "RELATED_TO" },
-
-    // Concept relationships
-    { source: "concept_ai", target: "concept_ml", type: "RELATED_TO" },
-    { source: "concept_ml", target: "concept_llm", type: "RELATED_TO" },
-    { source: "concept_react", target: "concept_nextjs", type: "RELATED_TO" },
-
-    // Project-Task relationships
-    { source: "project_total_recall", target: "task_1", type: "CONTAINS_TASK" },
-    { source: "project_blog", target: "task_2", type: "CONTAINS_TASK" },
-    { source: "project_blog", target: "task_4", type: "CONTAINS_TASK" },
-
-    // Entity relationships
-    { source: "entity_openai", target: "concept_llm", type: "RELATED_TO" },
-    { source: "entity_vercel", target: "concept_nextjs", type: "RELATED_TO" },
-
-    // Person relationships
-    { source: "person_sarah", target: "concept_ai", type: "RELATED_TO" },
-    { source: "person_alex", target: "concept_productivity", type: "RELATED_TO" },
-  ],
-};
-
 export async function GET() {
   try {
-    // TODO: Replace with actual database query
-    // This is sample data for demonstration
+    // Fetch data from backend API
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const response = await fetch(`${backendUrl}/api/v1/graph/`);
     
-    // Simulate network delay for realistic loading state
-    // await new Promise(resolve => setTimeout(resolve, 500));
-
-    return NextResponse.json(sampleGraphData);
+    if (!response.ok) {
+      throw new Error(`Backend API error: ${response.status}`);
+    }
+    
+    const backendData = await response.json();
+    
+    // Transform backend data to frontend format
+    const transformedNodes: GraphNode[] = backendData.nodes.map((node: any) => {
+      let name = '';
+      let val = 5; // default value
+      let color: string | undefined;
+      let status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | undefined;
+      
+      // Determine name based on type and metadata
+      switch (node.type) {
+        case 'JournalEntry':
+          name = node.metadata?.title || node.metadata?.content?.substring(0, 50) + '...' || 'Journal Entry';
+          val = 12;
+          break;
+        case 'Entity':
+          name = node.metadata?.name || 'Unknown Entity';
+          val = 8;
+          break;
+        case 'Todo':
+          name = node.metadata?.task || 'Task';
+          val = 7;
+          status = node.metadata?.priority === 'must_do' ? 'OPEN' : 'IN_PROGRESS';
+          break;
+        case 'Event':
+          name = node.metadata?.title || 'Event';
+          val = 9;
+          break;
+        default:
+          name = node.label || node.type;
+          val = 5;
+      }
+      
+      return {
+        id: node.id,
+        name,
+        type: mapBackendTypeToFrontend(node.type),
+        val,
+        color,
+        status,
+        metadata: node.metadata,
+      };
+    });
+    
+    const transformedLinks: GraphLink[] = backendData.edges.map((edge: any) => ({
+      source: edge.source,
+      target: edge.target,
+      type: mapEdgeType(edge.type),
+      relationshipType: edge.properties?.type || edge.type,
+    }));
+    
+    return NextResponse.json({
+      nodes: transformedNodes,
+      links: transformedLinks,
+    });
   } catch (error) {
     console.error("Error fetching graph data:", error);
     return NextResponse.json(
       { error: "Failed to fetch graph data" },
       { status: 500 }
     );
+  }
+}
+
+// Helper function to map backend types to frontend types
+function mapBackendTypeToFrontend(backendType: string): GraphNode['type'] {
+  switch (backendType) {
+    case 'JournalEntry':
+      return 'JournalEntry';
+    case 'Entity':
+      return 'Entity';
+    case 'Todo':
+      return 'Task';
+    case 'Event':
+      return 'Event';
+    default:
+      return 'Concept'; // fallback
+  }
+}
+
+// Helper function to map edge types
+function mapEdgeType(edgeType: string): GraphLink['type'] {
+  switch (edgeType) {
+    case 'HAS_ENTITY':
+      return 'MENTIONS_ENTITY';
+    case 'HAS_TODO':
+      return 'CONTAINS_TASK';
+    case 'HAS_EVENT':
+      return 'MENTIONS_ENTITY'; // Events are related to entities
+    case 'RELATED_TO':
+      return 'RELATED_TO';
+    default:
+      return 'RELATED_TO';
   }
 }

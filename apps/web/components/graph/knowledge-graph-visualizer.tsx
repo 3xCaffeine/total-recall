@@ -25,7 +25,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 export interface GraphNode {
   id: string;
   name: string;
-  type: 'JournalEntry' | 'JournalChunk' | 'Concept' | 'Entity' | 'Project' | 'Task' | 'Person' | 'Tag';
+  type: 'JournalEntry' | 'JournalChunk' | 'Concept' | 'Entity' | 'Project' | 'Task' | 'Person' | 'Tag' | 'Event';
   val: number;
   color?: string;
   status?: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
@@ -54,6 +54,7 @@ const NODE_COLORS_LIGHT: Record<GraphNode['type'], string> = {
   Task: '#FBBF24',           // Yellow
   Person: '#F472B6',         // Pink
   Tag: '#A78BFA',            // Purple
+  Event: '#10B981',          // Emerald
 };
 
 const NODE_COLORS_DARK: Record<GraphNode['type'], string> = {
@@ -65,6 +66,7 @@ const NODE_COLORS_DARK: Record<GraphNode['type'], string> = {
   Task: '#FDE047',           // Brighter yellow
   Person: '#F9A8D4',         // Lighter pink
   Tag: '#C4B5FD',            // Lighter purple
+  Event: '#34D399',          // Lighter emerald
 };
 
 // Graph events handler component
