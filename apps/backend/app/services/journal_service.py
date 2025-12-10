@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.journal_entry import JournalEntry
+from app.models.journal_entry import JournalEntry, ProcessingStatus
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 
 
@@ -35,6 +35,7 @@ class JournalService:
             user_id=user_id,
             title=entry.title,
             content=entry.content,
+            status=entry.status,
         )
         self.db.add(db_entry)
         self.db.commit()
