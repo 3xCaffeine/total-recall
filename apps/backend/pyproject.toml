@@ -26,4 +26,6 @@ dependencies = [
     "requests>=2.31.0",
     "asyncpg>=0.31.0",
     "cosdata-fastembed>=0.7.1",
+    "neomodel>=6.0.0",
+    "redis>=7.1.0",
 ]
