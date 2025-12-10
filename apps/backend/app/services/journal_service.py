@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.journal_entry import JournalEntry, ProcessingStatus
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 from app.services.ai_service import AIService
+from app.tasks.ai_tasks import ingest_extraction_to_graph
 
 
 class JournalService:
@@ -44,7 +45,8 @@ class JournalService:
         ai_service = AIService()
         try:
             extraction = await ai_service.extract_from_journal_entry(db_entry)
-            # TODO: Store or process extraction result
+            # Trigger graph ingestion task
+            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
         except ValueError:
             # Handle extraction failure, perhaps set status to failed
             pass
@@ -66,7 +68,8 @@ class JournalService:
         ai_service = AIService()
         try:
             extraction = await ai_service.extract_from_journal_entry(db_entry)
-            # TODO: Store or process extraction result
+            # Trigger graph ingestion task
+            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
         except ValueError:
             # Handle extraction failure
             pass
