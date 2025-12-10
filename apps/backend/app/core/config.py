@@ -34,6 +34,12 @@ class Settings(BaseSettings):
 
     # Google Gemini model name
     gemini_model: str = "gemini-2.5-flash-lite"
+
+    # Valkey (Redis clone) URL for Celery
+    valkey_url: str = "redis://localhost:6379/0"
+
+    # Neo4j database URL
+    neo4j_url: str = "bolt://localhost:7687"
     
     class Config:
         env_file = ".env"
