@@ -31,7 +31,7 @@ def read_entries(
 
 
 @router.post("/", response_model=JournalEntry)
-def create_entry(
+async def create_entry(
     entry: JournalEntryCreate,
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
@@ -40,7 +40,7 @@ def create_entry(
     Create a new journal entry.
     """
     service = JournalService(db)
-    return service.create_entry(current_user.id, entry)
+    return await service.create_entry(current_user.id, entry)
 
 
 @router.get("/{entry_id}", response_model=JournalEntry)
@@ -60,7 +60,7 @@ def read_entry(
 
 
 @router.put("/{entry_id}", response_model=JournalEntry)
-def update_entry(
+async def update_entry(
     entry_id: int,
     entry: JournalEntryUpdate,
     db: Session = Depends(get_db),
@@ -70,7 +70,7 @@ def update_entry(
     Update a journal entry.
     """
     service = JournalService(db)
-    db_entry = service.update_entry(entry_id, current_user.id, entry)
+    db_entry = await service.update_entry(entry_id, current_user.id, entry)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Entry not found")
     return db_entry

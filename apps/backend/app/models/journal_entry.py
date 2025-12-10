@@ -9,10 +9,10 @@ from app.models.base import Base
 
 
 class ProcessingStatus(enum.Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    PROCESSED = "processed"
-    FAILED = "failed"
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    PROCESSED = "PROCESSED"
+    FAILED = "FAILED"
 
 
 class JournalEntry(Base):

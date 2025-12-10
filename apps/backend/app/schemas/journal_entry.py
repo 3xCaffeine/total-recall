@@ -8,15 +8,16 @@ from enum import Enum as PyEnum
 
 
 class ProcessingStatus(PyEnum):
-    PROCESSING = "processing"
-    PROCESSED = "processed"
-    FAILED = "failed"
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    PROCESSED = "PROCESSED"
+    FAILED = "FAILED"
 
 
 class JournalEntryBase(BaseModel):
     title: Optional[str] = None
     content: str
-    status: ProcessingStatus = ProcessingStatus.PROCESSING
+    status: str = "PENDING"
 
 
 class JournalEntryCreate(JournalEntryBase):
