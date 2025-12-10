@@ -6,7 +6,6 @@ from app.core.config import get_settings
 from app.schemas.extraction import ExtractionResult
 from app.schemas.journal_entry import JournalEntry
 from app.core.prompts import SYSTEM_PROMPT, FEW_SHOT_EXAMPLES
-import json
 
 class AIService:
     """
