@@ -29,6 +29,7 @@ import {
   Circle,
   CircleDot,
   CheckCircle2,
+  Calendar,
   LucideIcon,
 } from "lucide-react";
 
@@ -44,6 +45,7 @@ const NODE_COLORS_LIGHT: Record<GraphNode['type'], string> = {
   Task: '#FBBF24',
   Person: '#F472B6',
   Tag: '#A78BFA',
+  Event: '#10B981',
 };
 
 const NODE_COLORS_DARK: Record<GraphNode['type'], string> = {
@@ -55,6 +57,7 @@ const NODE_COLORS_DARK: Record<GraphNode['type'], string> = {
   Task: '#FDE047',
   Person: '#F9A8D4',
   Tag: '#C4B5FD',
+  Event: '#34D399',
 };
 
 // Icons for node types
@@ -67,6 +70,7 @@ const NODE_ICONS: Record<GraphNode['type'], LucideIcon> = {
   Task: CheckSquare,
   Person: User,
   Tag: Tag,
+  Event: Calendar,
 };
 
 // Task status icons

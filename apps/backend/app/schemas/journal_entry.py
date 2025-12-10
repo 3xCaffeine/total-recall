@@ -4,11 +4,20 @@ Pydantic schemas for journal entries.
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from enum import Enum as PyEnum
+
+
+class ProcessingStatus(PyEnum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    PROCESSED = "PROCESSED"
+    FAILED = "FAILED"
 
 
 class JournalEntryBase(BaseModel):
     title: Optional[str] = None
     content: str
+    status: str = "PENDING"
 
 
 class JournalEntryCreate(JournalEntryBase):

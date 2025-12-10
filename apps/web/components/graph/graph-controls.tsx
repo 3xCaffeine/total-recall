@@ -24,6 +24,7 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Calendar,
   LucideIcon,
 } from "lucide-react";
 
@@ -39,6 +40,7 @@ const NODE_COLORS: Record<GraphNode['type'], string> = {
   Task: '#FBBF24',
   Person: '#F472B6',
   Tag: '#A78BFA',
+  Event: '#10B981',
 };
 
 // Icons for node types
@@ -51,6 +53,7 @@ const NODE_ICONS: Record<GraphNode['type'], LucideIcon> = {
   Task: CheckSquare,
   Person: User,
   Tag: Tag,
+  Event: Calendar,
 };
 
 const NODE_TYPE_LABELS: Record<GraphNode['type'], string> = {
@@ -62,6 +65,7 @@ const NODE_TYPE_LABELS: Record<GraphNode['type'], string> = {
   Task: 'Tasks',
   Person: 'People',
   Tag: 'Tags',
+  Event: 'Events',
 };
 
 interface GraphControlsProps {

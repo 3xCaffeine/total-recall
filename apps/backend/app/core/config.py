@@ -29,6 +29,18 @@ class Settings(BaseSettings):
     # Session cookie name (must match Better Auth's cookie name)
     session_cookie_name: str = "better-auth.session_token"
 
+    # Google Gemini API key for AI services
+    gemini_api_key: str
+
+    # Google Gemini model name
+    gemini_model: str = "gemini-2.5-flash-lite"
+
+    # Valkey (Redis clone) URL for Celery
+    valkey_url: str = "redis://localhost:6379/0"
+
+    # Neo4j database URL
+    neo4j_url: str = "bolt://localhost:7687"
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
