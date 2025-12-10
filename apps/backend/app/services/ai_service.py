@@ -1,6 +1,5 @@
 # AI processing logic (LLM calls, extraction)
 import asyncio
-import google.genai as genai
 from google.genai import types
 from app.core.gemini_client import get_genai_client
 from app.core.config import get_settings
