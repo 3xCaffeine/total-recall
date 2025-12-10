@@ -28,12 +28,10 @@ class GraphService:
             content: Content of the journal entry
             title: Title of the journal entry (optional)
         """
-        print(f"DEBUG: Starting ingestion for journal_entry_id {journal_entry_id}")
         
         # Create journal entry node if not exists
         try:
             journal_node = JournalEntryNode.nodes.get(node_id=str(journal_entry_id))
-            print(f"DEBUG: Found existing journal node {journal_node.node_id}")
         except JournalEntryNode.DoesNotExist:
             result = JournalEntryNode.get_or_create({
                 "node_id": str(journal_entry_id),
@@ -57,7 +55,6 @@ class GraphService:
                 entity_node.normalized_name = entity.normalized_name
             entity_node.attributes = entity.attributes
             entity_node.save()
-            print(f"DEBUG: Created entity {prefixed_id}")
 
             # Connect to journal entry
             journal_node.has_entity.connect(entity_node)
@@ -77,7 +74,6 @@ class GraphService:
             prefixed_related = [entity_id_map.get(eid, eid) for eid in todo.related_entities]
             todo_node.related_entities = prefixed_related
             todo_node.save()
-            print(f"DEBUG: Created todo {prefixed_id}")
 
             # Connect to journal entry
             journal_node.has_todo.connect(todo_node)
@@ -88,7 +84,7 @@ class GraphService:
                     entity_node = EntityNode.nodes.get(node_id=entity_id)
                     todo_node.related_entity.connect(entity_node)
                 except EntityNode.DoesNotExist:
-                    print(f"DEBUG: Entity {entity_id} not found for todo {prefixed_id}")
+                    print(f"DEBUG: Entity {entity_id} not found")
 
         # Ingest events
         event_id_map = {}
@@ -107,7 +103,6 @@ class GraphService:
             prefixed_related = [entity_id_map.get(eid, eid) for eid in event.related_entities]
             event_node.related_entities = prefixed_related
             event_node.save()
-            print(f"DEBUG: Created event {prefixed_id}")
 
             # Connect to journal entry
             journal_node.has_event.connect(event_node)
@@ -139,8 +134,6 @@ class GraphService:
                 print(f"DEBUG: Created relationship {source_id} -> {target_id}")
             except EntityNode.DoesNotExist as e:
                 print(f"DEBUG: Entity not found for relationship: {e}")
-        
-        print(f"DEBUG: Ingestion complete for journal_entry_id {journal_entry_id}")
 
     def get_graph_snapshot(self) -> Dict[str, Sequence[Any]]:
         """Return all nodes and relationships stored in Neo4j."""

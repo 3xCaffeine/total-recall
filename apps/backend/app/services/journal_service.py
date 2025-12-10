@@ -7,10 +7,10 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.journal_entry import JournalEntry, ProcessingStatus
+from app.models.journal_entry import JournalEntry
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 from app.services.ai_service import AIService
-from app.tasks.ai_tasks import ingest_extraction_to_graph
+from app.tasks.ai_tasks import ingest_vectors_to_cosdata
 
 
 class JournalService:
@@ -47,6 +47,9 @@ class JournalService:
             extraction = await ai_service.extract_from_journal_entry(db_entry)
             # Trigger graph ingestion task
             ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            # Trigger vector ingestion task
+            ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
+            
         except ValueError:
             # Handle extraction failure, perhaps set status to failed
             pass
@@ -69,7 +72,9 @@ class JournalService:
         try:
             extraction = await ai_service.extract_from_journal_entry(db_entry)
             # Trigger graph ingestion task
-            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            # Trigger vector ingestion task
+            ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
         except ValueError:
             # Handle extraction failure
             pass

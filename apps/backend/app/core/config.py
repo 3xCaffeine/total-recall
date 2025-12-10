@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     # Neo4j database URL
     neo4j_url: str = "bolt://localhost:7687"
     
+    #cosdata database config
+    cosdata_host: str = "http://127.0.0.1:8443"
+    cosdata_username: str = "admin"
+    cosdata_password: str = "admin"
+    cosdata_collection_name: str = "total_recall_collection"
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
