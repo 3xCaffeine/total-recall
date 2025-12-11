@@ -47,10 +47,17 @@ class JournalService:
         # Trigger extraction
         ai_service = AIService()
         try:
-            # Format current date for LLM context (use entry creation time)
-            current_date = db_entry.created_at.strftime("%B %d, %Y")
             # Use timezone from request, or default to UTC
             timezone = entry.timezone or "UTC"
+            
+            # Convert UTC created_at to user's timezone for date context
+            from datetime import timezone as dt_timezone
+            import zoneinfo
+            utc_time = db_entry.created_at.replace(tzinfo=dt_timezone.utc)
+            user_tz = zoneinfo.ZoneInfo(timezone)
+            local_time = utc_time.astimezone(user_tz)
+            current_date = local_time.strftime("%B %d, %Y")
+            
             extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
             # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
@@ -101,10 +108,17 @@ class JournalService:
         # Trigger extraction
         ai_service = AIService()
         try:
-            # Format current date for LLM context (use entry update time)
-            current_date = db_entry.updated_at.strftime("%B %d, %Y")
             # Use timezone from request if provided, otherwise default to UTC
             timezone = entry.timezone if hasattr(entry, 'timezone') and entry.timezone else "UTC"
+            
+            # Convert UTC updated_at to user's timezone for date context
+            from datetime import timezone as dt_timezone
+            import zoneinfo
+            utc_time = db_entry.updated_at.replace(tzinfo=dt_timezone.utc)
+            user_tz = zoneinfo.ZoneInfo(timezone)
+            local_time = utc_time.astimezone(user_tz)
+            current_date = local_time.strftime("%B %d, %Y")
+            
             extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
             # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
