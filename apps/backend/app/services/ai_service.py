@@ -5,7 +5,7 @@ from app.core.gemini_client import get_genai_client
 from app.core.config import get_settings
 from app.schemas.extraction import ExtractionResult
 from app.schemas.journal_entry import JournalEntry
-from app.core.prompts import SYSTEM_PROMPT, FEW_SHOT_EXAMPLES
+from app.core.prompts import SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, build_extraction_prompt
 
 class AIService:
     """
@@ -17,18 +17,20 @@ class AIService:
         self.client = get_genai_client()
         self.settings = get_settings()
 
-    async def extract_from_journal_entry(self, entry: JournalEntry) -> ExtractionResult:
+    async def extract_from_journal_entry(self, entry: JournalEntry, current_date: str, timezone: str = "UTC") -> ExtractionResult:
         """
         Extract structured information from a journal entry using LLM.
 
         Args:
             entry: The journal entry to analyze.
+            current_date: Current date in format "Month DD, YYYY" for relative date context.
+            timezone: User's timezone (e.g., "Asia/Kolkata", "America/New_York").
 
         Returns:
             ExtractionResult with metadata, entities, relationships, todos, and events.
         """
         system_instruction = f"{SYSTEM_PROMPT}\n\n{FEW_SHOT_EXAMPLES}"
-        contents = f"Journal Entry: {entry.content}\n\nOutput:"
+        contents = build_extraction_prompt(entry.content, current_date, timezone)
         
         response = await asyncio.to_thread(
             self.client.models.generate_content,

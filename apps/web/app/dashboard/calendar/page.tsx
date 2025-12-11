@@ -172,8 +172,12 @@ function formatTimeRange(event: CalendarEvent): string {
   }
 }
 
-function getDateKey(date: Date): string {
-  return date.toISOString().split("T")[0];
+function getDateKey(year: number, month: number, day: number): string {
+  // Format as YYYY-MM-DD without timezone conversion
+  const yyyy = year.toString();
+  const mm = (month + 1).toString().padStart(2, '0');
+  const dd = day.toString().padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function getEventsForDate(
@@ -182,7 +186,7 @@ function getEventsForDate(
   month: number,
   day: number
 ): CalendarEvent[] {
-  const dateKey = getDateKey(new Date(year, month, day));
+  const dateKey = getDateKey(year, month, day);
   return events.filter((event) => {
     if (event.start.date && event.end.date) {
       // All-day event: spans from start.date to end.date (exclusive)
