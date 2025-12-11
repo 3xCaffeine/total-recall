@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.journal_entry import JournalEntry
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 from app.services.ai_service import AIService
-from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction
+from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction, ingest_extraction_to_graph
 
 
 class JournalService:
