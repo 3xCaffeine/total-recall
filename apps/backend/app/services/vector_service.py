@@ -103,15 +103,16 @@ class VectorService:
         print(f"DEBUG: dense search results: {results}")
         
         # Filter results by user_id
-        filtered_results = [
-            result for result in results['results']
-            if result['document_id'].startswith(f"user_{user_id}_")
-        ]
+        # filtered_results = [
+        #     result for result in results['results']
+        #     if result['document_id'].startswith(f"user_{user_id}_")
+        # ]
 
         # Fetch text for results where it's null
-        for result in filtered_results:
+        # for result in filtered_results:
+        for result in results['results']:
             if result.get('text') is None:
                 result['text'] = self.chunk_texts.get(result['id'], None)
 
         # Return top_k filtered results
-        return filtered_results[:top_k]
+        return results['results'][:top_k]

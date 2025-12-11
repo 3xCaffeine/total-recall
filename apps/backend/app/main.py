@@ -8,6 +8,7 @@ from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.journal import router as journal_router
 from app.api.v1.endpoints.calendar import router as calendar_router
 from app.api.v1.endpoints.graph import router as graph_router
+from app.api.v1.chat import router as chat_router
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -19,6 +20,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    redirect_slashes=False,
 )
 
 # CORS middleware for frontend integration
@@ -35,6 +37,7 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(journal_router, prefix="/api/v1/journal", tags=["journal"])
 app.include_router(calendar_router, prefix="/api/v1/calendar", tags=["calendar"])
 app.include_router(graph_router, prefix="/api/v1/graph", tags=["graph"])
+app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
 
 
 @app.get("/health")

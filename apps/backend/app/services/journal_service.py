@@ -13,7 +13,7 @@ from app.services.ai_service import AIService
 from app.services.auth_service import AuthService
 from app.core.database import get_auth_db
 from app.core.config import get_settings
-from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction
+from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction, ingest_extraction_to_graph
 
 
 class JournalService:
@@ -60,7 +60,7 @@ class JournalService:
             
             extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
-            # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
             # Trigger todo processing task
@@ -121,7 +121,7 @@ class JournalService:
             
             extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
-            # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
             # Trigger todo processing task

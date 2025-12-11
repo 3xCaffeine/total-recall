@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # Google Gemini API key for AI services
     gemini_api_key: str
 
+    # Google API key (for ADK/Google GenAI)
+    google_api_key: str
+
+    # Google GenAI use VertexAI flag
+    google_genai_use_vertexai: bool = False
+
     # Google Gemini model name
     gemini_model: str = "gemini-2.5-flash-lite"
 
