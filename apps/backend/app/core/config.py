@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # Google Gemini API key for AI services
     gemini_api_key: str
 
+    # Google API key (for ADK/Google GenAI)
+    google_api_key: str
+
+    # Google GenAI use VertexAI flag
+    google_genai_use_vertexai: bool = False
+
     # Google Gemini model name
     gemini_model: str = "gemini-2.5-flash-lite"
 
@@ -40,6 +46,12 @@ class Settings(BaseSettings):
 
     # Neo4j database URL
     neo4j_url: str = "bolt://localhost:7687"
+    
+    #cosdata database config
+    cosdata_host: str = "http://127.0.0.1:8443"
+    cosdata_username: str = "admin"
+    cosdata_password: str = "admin"
+    cosdata_collection_name: str = "total_recall_collection"
     
     class Config:
         env_file = ".env"
