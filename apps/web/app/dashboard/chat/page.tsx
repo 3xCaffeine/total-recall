@@ -1,13 +1,26 @@
-import { JournalHeader } from "@/components/journal";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function ChatPage() {
+import { JournalHeader } from "@/components/journal";
+import { ChatClient } from "@/components/chat/chat-client";
+import { auth } from "@/lib/auth";
+
+export default async function ChatPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const userId = session!.user.id;
+
   return (
     <>
       <JournalHeader title="Chat" />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-center min-h-[50vh] rounded-xl bg-muted/50">
-          <p className="text-muted-foreground">AI Chat coming soon...</p>
-        </div>
+        <ChatClient userId={userId} />
       </div>
     </>
   );
