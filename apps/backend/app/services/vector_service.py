@@ -8,6 +8,8 @@ class VectorService:
     def __init__(self):
         # Initialize embedding model (adjust model based on dimension)
         self.embedding_model = TextEmbedding(model_name="thenlper/gte-base")
+        # Store chunk texts for retrieval
+        self.chunk_texts = {}
 
     def chunk_text(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
         """Simple text chunking by sentences with overlap."""
@@ -41,7 +43,7 @@ class VectorService:
 
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of text chunks."""
-        return list(self.embedding_model.embed(texts))
+        return [emb.tolist() for emb in self.embedding_model.embed(texts)]
 
     def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> None:
         """Upsert vectors to Cosdata collection."""
@@ -61,7 +63,7 @@ class VectorService:
         # Prepare vectors for upsert
         vectors = []
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            vector_id = f"journal_{journal_entry_id}_chunk_{i}"
+            vector_id = f"user_{user_id}_journal_{journal_entry_id}_chunk_{i}"
             metadata = {
                 "journal_entry_id": journal_entry_id,
                 "chunk_index": i,
@@ -74,11 +76,42 @@ class VectorService:
             }
             vectors.append({
                 "id": vector_id,
-                "dense_values": embedding.tolist(),
-                "document_id": f"journal_{journal_entry_id}",
+                "dense_values": embedding,
+                "document_id": f"user_{user_id}_journal_{journal_entry_id}",
                 "metadata": metadata,
                 "text": chunk,  # Store original chunk for hybrid search
             })
+            # Store chunk text for retrieval
+            self.chunk_texts[vector_id] = chunk
 
         # Upsert to Cosdata
         self.upsert_vectors(vectors)
+
+    def search(self, query: str, user_id: str, top_k: int = 5) -> List[Dict[str, Any]]:
+        """Search for relevant journal entry chunks using vector similarity."""
+        # Generate embedding for the query
+        query_embedding = self.generate_embeddings([query])[0]
+
+        # Perform dense vector search
+        collection = get_collection()
+        results = collection.search.dense(
+            query_vector=query_embedding,
+            top_k=top_k * 2,  # Retrieve more to account for filtering
+            return_raw_text=True
+        )
+        
+        print(f"DEBUG: dense search results: {results}")
+        
+        # Filter results by user_id
+        filtered_results = [
+            result for result in results['results']
+            if result['document_id'].startswith(f"user_{user_id}_")
+        ]
+
+        # Fetch text for results where it's null
+        for result in filtered_results:
+            if result.get('text') is None:
+                result['text'] = self.chunk_texts.get(result['id'], None)
+
+        # Return top_k filtered results
+        return filtered_results[:top_k]

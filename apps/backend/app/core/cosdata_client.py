@@ -21,7 +21,8 @@ def get_collection():
                 dimension=768,
                 description="vector collection"
             )
-            index = collection.create_index(
+        try:
+            collection.create_index(
                 distance_metric="cosine",
                 num_layers=10,
                 max_cache_size=1000,
@@ -30,5 +31,7 @@ def get_collection():
                 neighbors_count=32,
                 level_0_neighbors_count=64
             )
+        except Exception:
+            pass
         _collection = collection
     return _collection
