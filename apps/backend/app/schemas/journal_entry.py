@@ -12,11 +12,11 @@ class JournalEntryBase(BaseModel):
 
 
 class JournalEntryCreate(JournalEntryBase):
-    pass
+    timezone: Optional[str] = None  # User's timezone (e.g., "Asia/Kolkata", "America/New_York")
 
 
 class JournalEntryUpdate(JournalEntryBase):
-    pass
+    timezone: Optional[str] = None  # User's timezone for update operations
 
 
 class JournalEntry(JournalEntryBase):

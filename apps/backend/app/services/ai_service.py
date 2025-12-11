@@ -1,1 +1,73 @@
+<<<<<<< Updated upstream
 # AI processing logic (LLM calls, extraction)
+=======
+# AI processing logic (LLM calls, extraction)
+import asyncio
+from google.genai import types
+from app.core.gemini_client import get_genai_client
+from app.core.config import get_settings
+from app.schemas.extraction import ExtractionResult
+from app.schemas.journal_entry import JournalEntry
+from app.core.prompts import SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, build_extraction_prompt
+
+class AIService:
+    """
+    Service for AI-related operations using Google GenAI.
+    Handles text generation, extraction, and other AI tasks.
+    """
+
+    def __init__(self):
+        self.client = get_genai_client()
+        self.settings = get_settings()
+
+    async def extract_from_journal_entry(self, entry: JournalEntry, current_date: str, timezone: str = "UTC") -> ExtractionResult:
+        """
+        Extract structured information from a journal entry using LLM.
+
+        Args:
+            entry: The journal entry to analyze.
+            current_date: Current date in format "Month DD, YYYY" for relative date context.
+            timezone: User's timezone (e.g., "Asia/Kolkata", "America/New_York").
+
+        Returns:
+            ExtractionResult with metadata, entities, relationships, todos, and events.
+        """
+        system_instruction = f"{SYSTEM_PROMPT}\n\n{FEW_SHOT_EXAMPLES}"
+        contents = build_extraction_prompt(entry.content, current_date, timezone)
+        
+        response = await asyncio.to_thread(
+            self.client.models.generate_content,
+            model=self.settings.gemini_model,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                response_mime_type="application/json",
+                response_json_schema=ExtractionResult.model_json_schema(),
+            ),
+            contents=contents,
+        )
+        try:
+            if not response.text:
+                raise ValueError("Empty response from LLM")
+            extraction_result = ExtractionResult.model_validate_json(response.text)
+            
+            # Debug: Print extraction results to check calendar events
+            print(f"\n{'='*60}")
+            print(f"EXTRACTION DEBUG - Journal Entry ID: {entry.id}")
+            print(f"{'='*60}")
+            print(f"Number of events extracted: {len(extraction_result.events)}")
+            for idx, event in enumerate(extraction_result.events, 1):
+                print(f"\nEvent {idx}:")
+                print(f"  Title: {event.title}")
+                print(f"  DateTime: {event.datetime}")
+                print(f"  Should Sync: {event.should_sync_calendar}")
+                print(f"  Location: {event.location}")
+                print(f"  Duration: {event.duration_minutes} minutes")
+            print(f"{'='*60}\n")
+            
+            return extraction_result
+        except ValueError as e:
+            # Handle parsing errors
+            raise ValueError(f"Failed to parse LLM response: {e}")
+    
+    
+>>>>>>> Stashed changes
