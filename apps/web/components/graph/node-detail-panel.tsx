@@ -124,19 +124,20 @@ export function NodeDetailPanel({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-hidden flex flex-col">
+      <SheetContent className="w-full sm:max-w-md overflow-hidden flex flex-col bg-background/95 p-0">
+        <div className="px-5 pt-5 pb-3">
         <SheetHeader className="space-y-4">
           {/* Node Icon and Type Badge */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 rounded-xl flex items-center justify-center border border-border/60 bg-muted/50"
               style={{ backgroundColor: `${nodeColor}20` }}
             >
               <NodeIcon className="w-6 h-6" color={nodeColor} />
             </div>
             <Badge
               variant="outline"
-              className="font-medium"
+              className="font-medium tracking-tight"
               style={{
                 borderColor: nodeColor,
                 color: nodeColor,
@@ -147,7 +148,7 @@ export function NodeDetailPanel({
           </div>
 
           {/* Node Name */}
-          <SheetTitle className="text-xl font-semibold leading-tight pr-8">
+          <SheetTitle className="text-2xl font-semibold leading-tight pr-8 tracking-tight">
             {node.name}
           </SheetTitle>
 
@@ -163,7 +164,7 @@ export function NodeDetailPanel({
             </div>
           )}
 
-          <SheetDescription className="text-sm text-muted-foreground">
+          <SheetDescription className="text-sm text-muted-foreground leading-relaxed">
             {node.type === 'JournalEntry' && node.metadata?.date ? (
               <span>
                 Created on{' '}
@@ -183,27 +184,43 @@ export function NodeDetailPanel({
             ) : null}
           </SheetDescription>
         </SheetHeader>
+        </div>
 
-        <ScrollArea className="flex-1 mt-6 -mx-6 px-6">
-          {/* Metadata Section */}
-          {node.metadata && Object.keys(node.metadata).length > 0 && (
-            <div className="space-y-3 mb-6">
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                Properties
-              </h4>
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                {Object.entries(node.metadata).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                    <span className="font-medium">{String(value)}</span>
+        <ScrollArea className="flex-1 min-h-0 px-5 pb-6">
+          {/* Journal entries keep a focused metadata block; other nodes stay minimal */}
+          {node.type === 'JournalEntry' && node.metadata && Object.keys(node.metadata).length > 0 && (
+            <div className="mt-1 mb-6 space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.12em]">Journal entry</h4>
+              <div className="rounded-xl border border-border/70 bg-card/70 p-4 space-y-3">
+                {node.metadata.title && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Title</p>
+                    <p className="text-sm font-medium leading-relaxed text-foreground/90">
+                      {String(node.metadata.title)}
+                    </p>
                   </div>
-                ))}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Importance</span>
-                  <span className="font-medium">{node.val}</span>
-                </div>
+                )}
+                {node.metadata.content && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Content</p>
+                    <p className="text-sm leading-relaxed text-foreground/90">
+                      {String(node.metadata.content)}
+                    </p>
+                  </div>
+                )}
+                {node.metadata.date && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-sm font-medium leading-relaxed text-foreground/90">
+                      {new Date(String(node.metadata.date)).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
