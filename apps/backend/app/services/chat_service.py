@@ -82,16 +82,18 @@ class ChatService:
         if function_call:
             func_name = function_call.name
             args = function_call.args or {}
-            print("Function call detected:", func_name, args)
+            print("DEBUG: Function call detected:", func_name, args)
 
             if func_name == "vector_search":
+                print("DEBUG: Preparing to call vector_service.search")
                 vector_service = VectorService()
+                print("DEBUG: VectorService instance created")
                 result = vector_service.search(
                     query=args.get("query", ""),
                     user_id=args.get("user_id", ""),
                     top_k=args.get("top_k", 5)
                 )
-                print(f"Vector Search Result: {result}")
+                print(f"DEBUG: Vector search result: {result}")
 
                 if result:
                     result_context = f"Vector search results: {result}"
@@ -115,7 +117,7 @@ class ChatService:
                     self.client.models.generate_content,
                     model=self.settings.gemini_model,
                     contents=follow_up_prompt,
-                    config=config,
+                    config=types.GenerateContentConfig(),
                 )
 
                 return final_response.text or "No response generated."

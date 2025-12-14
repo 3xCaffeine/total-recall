@@ -89,11 +89,15 @@ class VectorService:
 
     def search(self, query: str, user_id: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """Search for relevant journal entry chunks using vector similarity."""
+        print("DEBUG: Starting vector_service.search")
         # Generate embedding for the query
         query_embedding = self.generate_embeddings([query])[0]
+        print("DEBUG: Query embedding generated")
 
         # Perform dense vector search
+        print("DEBUG: About to get collection")
         collection = get_collection()
+        print("DEBUG: Collection obtained")
         results = collection.search.dense(
             query_vector=query_embedding,
             top_k=top_k * 2,  # Retrieve more to account for filtering

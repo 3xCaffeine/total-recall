@@ -6,11 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from enum import Enum as PyEnum
 
-
-class Priority(PyEnum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
+from app.models.todo import Priority
 
 
 class TodoBase(BaseModel):

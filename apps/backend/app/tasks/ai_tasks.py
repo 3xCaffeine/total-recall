@@ -66,9 +66,42 @@ def process_todos_from_extraction(extraction: dict, journal_entry_id: int, user_
     # Convert dict back to ExtractionResult
     extraction_result = ExtractionResult(**extraction)
     
-    # For now, just print the todos
-    for todo in extraction_result.todos:
-        print(f"TODO: {todo.task}, Priority: {todo.priority}, Due: {todo.due}")
+    # Get database session
+    db = next(get_db())
+    todo_service = TodoService(db)
+    
+    try:
+        for todo in extraction_result.todos:
+            # Map priority string to enum
+            priority_str = todo.priority.lower() if todo.priority else "low"
+            if "must" in priority_str or "high" in priority_str:
+                priority = Priority.HIGH
+            elif "normal" in priority_str or "medium" in priority_str:
+                priority = Priority.MEDIUM
+            else:
+                priority = Priority.LOW
+            
+            # Parse due date
+            due_date = None
+            if todo.due:
+                try:
+                    due_date = datetime.fromisoformat(todo.due.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    logger.warning(f"Could not parse due date: {todo.due}")
+            
+            # Create TodoCreate object
+            todo_create = TodoCreate(
+                task=todo.task,
+                priority=priority,
+                due_date=due_date,
+                journal_entry_id=journal_entry_id
+            )
+            
+            # Create the todo
+            created_todo = todo_service.create_todo(user_id, todo_create)
+            print(f"Created TODO: {created_todo.task} (ID: {created_todo.id})")
+    finally:
+        db.close()
 
 
 @celery_app.task
