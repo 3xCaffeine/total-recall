@@ -11,11 +11,13 @@ export interface JournalEntry {
 export interface CreateJournalEntryRequest {
   title?: string;
   content: string;
+  timezone?: string; // User's IANA timezone (e.g., "Asia/Kolkata", "America/New_York")
 }
 
 export interface UpdateJournalEntryRequest {
   title?: string;
   content?: string;
+  timezone?: string; // User's IANA timezone
 }
 
 export interface JournalEntryFilters {

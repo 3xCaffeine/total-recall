@@ -3,7 +3,14 @@ from app.schemas.extraction import ExtractionResult
 from app.services.graph_service import GraphService
 from app.services.vector_service import VectorService
 from app.services.todo_service import TodoService
+from app.services.calendar_service import GoogleCalendarService
+from app.core.database import get_db
+from app.schemas.todo import TodoCreate, Priority
 from typing import Optional
+from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -59,25 +66,131 @@ def process_todos_from_extraction(extraction: dict, journal_entry_id: int, user_
     # Convert dict back to ExtractionResult
     extraction_result = ExtractionResult(**extraction)
     
-    # For now, just print the todos
-    for todo in extraction_result.todos:
-        print(f"TODO: {todo.task}, Priority: {todo.priority}, Due: {todo.due}")
+    # Get database session
+    db = next(get_db())
+    todo_service = TodoService(db)
+    
+    try:
+        for todo in extraction_result.todos:
+            # Map priority string to enum
+            priority_str = todo.priority.lower() if todo.priority else "low"
+            if "must" in priority_str or "high" in priority_str:
+                priority = Priority.HIGH
+            elif "normal" in priority_str or "medium" in priority_str:
+                priority = Priority.MEDIUM
+            else:
+                priority = Priority.LOW
+            
+            # Parse due date
+            due_date = None
+            if todo.due:
+                try:
+                    due_date = datetime.fromisoformat(todo.due.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    logger.warning(f"Could not parse due date: {todo.due}")
+            
+            # Create TodoCreate object
+            todo_create = TodoCreate(
+                task=todo.task,
+                priority=priority,
+                due_date=due_date,
+                journal_entry_id=journal_entry_id
+            )
+            
+            # Create the todo
+            created_todo = todo_service.create_todo(user_id, todo_create)
+            print(f"Created TODO: {created_todo.task} (ID: {created_todo.id})")
+    finally:
+        db.close()
 
 
 @celery_app.task
-def process_calendar_events_from_extraction(extraction: dict, journal_entry_id: int, user_id: str):
+def process_calendar_events_from_extraction(
+    extraction: dict,
+    journal_entry_id: int,
+    user_id: str,
+    access_token: str,
+    refresh_token: str,
+    token_expiry: Optional[str],
+    client_id: str,
+    client_secret: str,
+    user_timezone: str = "UTC"
+):
     """
-    Process and sync calendar events from extracted data.
+    Process and sync calendar events from extracted data to Google Calendar.
 
     Args:
         extraction: Dict representation of ExtractionResult
         journal_entry_id: ID of the journal entry
         user_id: User ID owning the entry
+        access_token: User's Google OAuth access token
+        refresh_token: User's Google OAuth refresh token
+        token_expiry: When the access token expires (ISO format)
+        client_id: Google OAuth client ID
+        client_secret: Google OAuth client secret
+        user_timezone: User's IANA timezone (e.g., 'Asia/Kolkata', 'America/New_York')
     """
-    print(f"DEBUG: Starting process_calendar_events_from_extraction for journal_entry_id: {journal_entry_id}")
-    # Convert dict back to ExtractionResult
+    logger.info(f"Starting process_calendar_events_from_extraction for journal_entry_id: {journal_entry_id}")
+    
     extraction_result = ExtractionResult(**extraction)
     
-    # For now, just print the events
-    for event in extraction_result.events:
-        print(f"EVENT: {event.title}, Datetime: {event.datetime}, Location: {event.location}")
+    # Filter events that should be synced to calendar
+    events_to_sync = [e for e in extraction_result.events if e.should_sync_calendar]
+    
+    if not events_to_sync:
+        logger.info("No events to sync to calendar")
+        return
+    
+    try:
+        # Parse token expiry
+        expiry = None
+        if token_expiry:
+            try:
+                expiry = datetime.fromisoformat(token_expiry.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Could not parse token expiry: {token_expiry}")
+        
+        # Initialize Google Calendar service
+        calendar_service = GoogleCalendarService(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_expiry=expiry,
+            client_id=client_id,
+            client_secret=client_secret
+        )
+        
+        for event in events_to_sync:
+            # Parse event datetime
+            if not event.datetime:
+                logger.warning(f"Event '{event.title}' has no datetime, skipping")
+                continue
+            
+            try:
+                start_dt = datetime.fromisoformat(event.datetime.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Could not parse datetime for event '{event.title}': {event.datetime}")
+                continue
+            
+            # Calculate end time (use duration if provided, otherwise default to 1 hour)
+            duration_minutes = event.duration_minutes or 60
+            end_dt = start_dt + timedelta(minutes=duration_minutes)
+            
+            # Format for Google Calendar API with user's timezone
+            start = {"dateTime": start_dt.isoformat(), "timeZone": user_timezone}
+            end = {"dateTime": end_dt.isoformat(), "timeZone": user_timezone}
+            
+            # Create event in Google Calendar
+            created_event = calendar_service.create_event(
+                calendar_id="primary",
+                summary=event.title,
+                start=start,
+                end=end,
+                description=f"From journal entry #{journal_entry_id}",
+                location=event.location
+            )
+            
+            logger.info(f"Created calendar event: {created_event.get('id')} - {event.title}")
+    
+    except Exception as e:
+        logger.error(f"Error processing calendar events: {e}")
+        raise

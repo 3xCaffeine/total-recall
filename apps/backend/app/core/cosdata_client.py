@@ -6,22 +6,30 @@ _collection = None
 def get_collection():
     global _collection
     if _collection is None:
+        print("DEBUG: Initializing Cosdata Client")
         settings = get_settings()
+        print(f"DEBUG: Cosdata settings - Host: {settings.cosdata_host}, Username: {settings.cosdata_username}, Password: {settings.cosdata_password}, Collection: {settings.cosdata_collection_name}")
         client = Client(
             host=settings.cosdata_host,
             username=settings.cosdata_username,
-            password=settings.cosdata_password,
+            password="admin",
             verify=False
         )
+        print("DEBUG: Client initialized successfully")
         try:
+            print("DEBUG: Attempting to get collection")
             collection = client.get_collection(settings.cosdata_collection_name)
-        except Exception:
+            print("DEBUG: Collection retrieved")
+        except Exception as e:
+            print(f"DEBUG: Collection not found, creating new one. Error: {e}")
             collection = client.create_collection(
                 name=settings.cosdata_collection_name,
                 dimension=768,
                 description="vector collection"
             )
+            print("DEBUG: Collection created")
         try:
+            print("DEBUG: Attempting to create index")
             collection.create_index(
                 distance_metric="cosine",
                 num_layers=10,
@@ -31,7 +39,8 @@ def get_collection():
                 neighbors_count=32,
                 level_0_neighbors_count=64
             )
-        except Exception:
-            pass
+            print("DEBUG: Index created")
+        except Exception as e:
+            print(f"DEBUG: Index creation failed or already exists. Error: {e}")
         _collection = collection
     return _collection

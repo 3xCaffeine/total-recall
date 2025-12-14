@@ -11,6 +11,13 @@ You are an AI assistant specialized in extracting structured information from pe
 4. **todos**: Actionable tasks or reminders extracted from the entry.
 5. **events**: Scheduled or planned events, including meetings, appointments, or activities.
 
+IMPORTANT: When processing dates and times:
+- You will be provided with the current date and the user's timezone
+- Use the current date as your reference for relative dates ("tomorrow", "next week", "Friday", etc.)
+- Interpret all times in the user's timezone (e.g., "7 PM" means 7 PM in their timezone)
+- All datetime values in your output must use ISO 8601 format: YYYY-MM-DDTHH:MM:SS
+- Example: If current date is December 11, 2025, timezone is Asia/Kolkata, and entry says "meeting tomorrow at 3 PM", output: "2025-12-12T15:00:00"
+
 Output must be valid JSON matching the specified structure. Use null for missing values. Assign unique IDs (e.g., "e1", "t1", "ev1") for entities, todos, and events. Be precise and only extract what's explicitly or clearly implied in the text.
 """
 
@@ -152,3 +159,49 @@ Output:
   ]
 }
 """
+
+
+def build_extraction_prompt(journal_content: str, current_date: str, timezone: str = "UTC") -> str:
+    """
+    Build the extraction prompt with current date and timezone context.
+    
+    Args:
+        journal_content: The journal entry content to extract from
+        current_date: Current date in format "Month DD, YYYY" (e.g., "December 11, 2025")
+        timezone: User's timezone (e.g., "Asia/Kolkata", "America/New_York")
+    
+    Returns:
+        Formatted prompt string with date and timezone context
+    """
+    from datetime import datetime, timedelta
+    
+    # Parse the current date to calculate tomorrow
+    current_dt = datetime.strptime(current_date, "%B %d, %Y")
+    tomorrow_dt = current_dt + timedelta(days=1)
+    
+    # Format dates with day of week for clarity
+    current_formatted = current_dt.strftime("%A, %B %d, %Y")  # e.g., "Thursday, December 12, 2025"
+    tomorrow_formatted = tomorrow_dt.strftime("%A, %B %d, %Y")  # e.g., "Friday, December 13, 2025"
+    current_iso_date = current_dt.strftime("%Y-%m-%d")  # e.g., "2025-12-12"
+    tomorrow_iso_date = tomorrow_dt.strftime("%Y-%m-%d")  # e.g., "2025-12-13"
+    
+    return f"""CURRENT DATE, TIME, AND TIMEZONE CONTEXT:
+📅 TODAY is {current_formatted} (date: {current_iso_date})
+📅 TOMORROW is {tomorrow_formatted} (date: {tomorrow_iso_date})
+🌍 User's timezone: {timezone}
+
+CRITICAL INSTRUCTIONS FOR DATE INTERPRETATION:
+1. When the entry mentions "today" → use date {current_iso_date}
+2. When the entry mentions "tomorrow" → use date {tomorrow_iso_date}
+3. When the entry mentions a specific time (e.g., "5 PM", "3:00") → interpret as {timezone} time
+4. For "next week", "next month", etc. → calculate from {current_formatted}
+5. All datetime fields MUST use ISO 8601 format: YYYY-MM-DDTHH:MM:SS
+
+EXAMPLES:
+- "appointment tomorrow at 5 PM" → datetime: "{tomorrow_iso_date}T17:00:00"
+- "meeting today at 3 PM" → datetime: "{current_iso_date}T15:00:00"
+- "dinner at 7:30 PM tomorrow" → datetime: "{tomorrow_iso_date}T19:30:00"
+
+Journal Entry: {journal_content}
+
+Output:"""

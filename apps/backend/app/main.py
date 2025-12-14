@@ -8,7 +8,7 @@ from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.journal import router as journal_router
 from app.api.v1.endpoints.calendar import router as calendar_router
 from app.api.v1.endpoints.graph import router as graph_router
-from app.api.v1.chat import router as chat_router
+from app.api.v1.endpoints.chat import router as chat_router
 from app.core.config import get_settings
 
 settings = get_settings()

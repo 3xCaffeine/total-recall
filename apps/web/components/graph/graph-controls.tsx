@@ -116,16 +116,17 @@ export function GraphControls({
     <Card
       className={cn(
         "absolute top-4 right-4 z-10",
-        "bg-background/80 backdrop-blur-md border shadow-lg",
+        "bg-background/85 backdrop-blur-md border shadow-lg",
         "transition-all duration-200 ease-in-out",
+        "min-w-[280px]",
         isExpanded ? "w-72" : "w-auto"
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-center gap-2 text-sm font-medium tracking-tight">
           <Filter className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Controls</span>
+          <span>Graph Controls</span>
         </div>
         <Button
           variant="ghost"
@@ -145,7 +146,7 @@ export function GraphControls({
         <div className="p-3 space-y-4">
           {/* Search */}
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">
               Search
             </Label>
             <div className="relative">
@@ -188,7 +189,7 @@ export function GraphControls({
           {/* Filters */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] flex items-center gap-1.5">
                 <Tags className="w-3 h-3" />
                 Filter by Type
               </Label>
@@ -210,11 +211,11 @@ export function GraphControls({
             {showFilters && (
               <div className="space-y-2">
                 {/* Quick actions */}
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs flex-1"
+                    className="h-8 text-xs font-medium"
                     onClick={selectAll}
                     disabled={isAllSelected}
                   >
@@ -223,7 +224,7 @@ export function GraphControls({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs flex-1"
+                    className="h-8 text-xs font-medium"
                     onClick={clearAll}
                     disabled={activeFilterCount === 0}
                   >
@@ -248,7 +249,7 @@ export function GraphControls({
                           "border",
                           isActive
                             ? "bg-primary/10 border-primary/30"
-                            : "bg-transparent border-transparent hover:bg-muted/50"
+                            : "bg-muted/40 border-border/60 hover:bg-muted/60"
                         )}
                       >
                         <div
@@ -264,8 +265,8 @@ export function GraphControls({
                         </div>
                         <span
                           className={cn(
-                            "truncate",
-                            isActive ? "font-medium" : "text-muted-foreground"
+                            "truncate text-[11px] tracking-tight",
+                            isActive ? "font-semibold" : "text-muted-foreground"
                           )}
                         >
                           {NODE_TYPE_LABELS[type]}

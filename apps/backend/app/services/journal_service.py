@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from app.models.journal_entry import JournalEntry
 from app.schemas.journal_entry import JournalEntryCreate, JournalEntryUpdate
 from app.services.ai_service import AIService
+from app.services.auth_service import AuthService
+from app.core.database import get_auth_db
+from app.core.config import get_settings
 from app.tasks.ai_tasks import ingest_vectors_to_cosdata, process_todos_from_extraction, process_calendar_events_from_extraction, ingest_extraction_to_graph
 
 
@@ -44,15 +47,46 @@ class JournalService:
         # Trigger extraction
         ai_service = AIService()
         try:
-            extraction = await ai_service.extract_from_journal_entry(db_entry)
+            # Use timezone from request, or default to UTC
+            timezone = entry.timezone or "UTC"
+            
+            # Convert UTC created_at to user's timezone for date context
+            from datetime import timezone as dt_timezone
+            import zoneinfo
+            utc_time = db_entry.created_at.replace(tzinfo=dt_timezone.utc)
+            user_tz = zoneinfo.ZoneInfo(timezone)
+            local_time = utc_time.astimezone(user_tz)
+            current_date = local_time.strftime("%B %d, %Y")
+            
+            extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
             ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
             # Trigger todo processing task
             process_todos_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
-            # Trigger calendar events processing task
-            process_calendar_events_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
+            
+            # Trigger calendar events processing task with user's Google OAuth tokens
+            auth_db = next(get_auth_db())
+            try:
+                auth_service = AuthService(auth_db)
+                user_data = auth_service.get_user(user_id)
+                
+                if user_data and user_data.get("google_access_token"):
+                    settings = get_settings()
+                    process_calendar_events_from_extraction.delay(
+                        extraction.model_dump(),
+                        db_entry.id,
+                        user_id,
+                        user_data["google_access_token"],
+                        user_data["google_refresh_token"],
+                        str(user_data["google_token_expires_at"]) if user_data.get("google_token_expires_at") else None,
+                        settings.google_client_id,
+                        settings.google_client_secret,
+                        timezone  # Pass user's timezone to calendar task
+                    )
+            finally:
+                auth_db.close()
             
         except ValueError:
             # Handle extraction failure, perhaps set status to failed
@@ -74,15 +108,46 @@ class JournalService:
         # Trigger extraction
         ai_service = AIService()
         try:
-            extraction = await ai_service.extract_from_journal_entry(db_entry)
+            # Use timezone from request if provided, otherwise default to UTC
+            timezone = entry.timezone if hasattr(entry, 'timezone') and entry.timezone else "UTC"
+            
+            # Convert UTC updated_at to user's timezone for date context
+            from datetime import timezone as dt_timezone
+            import zoneinfo
+            utc_time = db_entry.updated_at.replace(tzinfo=dt_timezone.utc)
+            user_tz = zoneinfo.ZoneInfo(timezone)
+            local_time = utc_time.astimezone(user_tz)
+            current_date = local_time.strftime("%B %d, %Y")
+            
+            extraction = await ai_service.extract_from_journal_entry(db_entry, current_date, timezone)
             # Trigger graph ingestion task
-            # ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
+            ingest_extraction_to_graph.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title)
             # Trigger vector ingestion task
             ingest_vectors_to_cosdata.delay(extraction.model_dump(), db_entry.id, db_entry.content, db_entry.title, user_id)
             # Trigger todo processing task
             process_todos_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
-            # Trigger calendar events processing task
-            process_calendar_events_from_extraction.delay(extraction.model_dump(), db_entry.id, user_id)
+            
+            # Trigger calendar events processing task with user's Google OAuth tokens
+            auth_db = next(get_auth_db())
+            try:
+                auth_service = AuthService(auth_db)
+                user_data = auth_service.get_user(user_id)
+                
+                if user_data and user_data.get("google_access_token"):
+                    settings = get_settings()
+                    process_calendar_events_from_extraction.delay(
+                        extraction.model_dump(),
+                        db_entry.id,
+                        user_id,
+                        user_data["google_access_token"],
+                        user_data["google_refresh_token"],
+                        str(user_data["google_token_expires_at"]) if user_data.get("google_token_expires_at") else None,
+                        settings.google_client_id,
+                        settings.google_client_secret,
+                        timezone  # Pass user's timezone to calendar task
+                    )
+            finally:
+                auth_db.close()
         except ValueError:
             # Handle extraction failure
             pass
