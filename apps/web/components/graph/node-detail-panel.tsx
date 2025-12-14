@@ -121,6 +121,10 @@ export function NodeDetailPanel({
   const nodeColor = colors[node.type];
   const NodeIcon = NODE_ICONS[node.type];
   const TaskStatusIcon = node.status ? TASK_STATUS_ICONS[node.status] : null;
+  const metadata = (node.metadata ?? {}) as Record<string, unknown>;
+  const titleValue = metadata.title;
+  const contentValue = metadata.content;
+  const dateValue = metadata.date;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -188,31 +192,31 @@ export function NodeDetailPanel({
 
         <ScrollArea className="flex-1 min-h-0 px-5 pb-6">
           {/* Journal entries keep a focused metadata block; other nodes stay minimal */}
-          {node.type === 'JournalEntry' && node.metadata && Object.keys(node.metadata).length > 0 && (
+          {node.type === 'JournalEntry' && metadata && Object.keys(metadata).length > 0 && (
             <div className="mt-1 mb-6 space-y-3">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.12em]">Journal entry</h4>
               <div className="rounded-xl border border-border/70 bg-card/70 p-4 space-y-3">
-                {node.metadata.title && (
+                {typeof titleValue !== "undefined" && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Title</p>
                     <p className="text-sm font-medium leading-relaxed text-foreground/90">
-                      {String(node.metadata.title)}
+                      {String(titleValue)}
                     </p>
                   </div>
                 )}
-                {node.metadata.content && (
+                {typeof contentValue !== "undefined" && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Content</p>
                     <p className="text-sm leading-relaxed text-foreground/90">
-                      {String(node.metadata.content)}
+                      {String(contentValue)}
                     </p>
                   </div>
                 )}
-                {node.metadata.date && (
+                {typeof dateValue !== "undefined" && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Date</p>
                     <p className="text-sm font-medium leading-relaxed text-foreground/90">
-                      {new Date(String(node.metadata.date)).toLocaleDateString('en-US', {
+                      {new Date(String(dateValue)).toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
