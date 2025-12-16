@@ -1,6 +1,8 @@
 # Total Recall
 
 An AI-powered productivity application designed to help users capture, organize, and retrieve their thoughts, tasks, and knowledge through intelligent journaling, conversational AI, and knowledge graph visualization.
+## Demo Video 🎥
+[Click here to watch the demo video](https://drive.google.com/file/d/1TnpLAqBhdyoaQos0Yoaz1Zjfu6_26aje/view?usp=sharing)
 
 ## 🚀 Key Features
 
